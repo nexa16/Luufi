@@ -107,9 +107,23 @@ function orderListApi(items: Order[], milestones: Milestone[] = [milestone()]) {
 beforeEach(() => {
   fetchMock.mockReset();
   vi.stubGlobal('fetch', (...args: Parameters<typeof fetch>) =>
-    requestUrl(args[0]).includes('/feedback-sources')
+    /\/(feedback-sources|approvals|progress|events|evidence)(?:\?|$)/.test(
+      requestUrl(args[0]),
+    )
       ? Promise.resolve(page([]))
-      : fetchMock(...args),
+      : /\/lifecycle(?:\?|$)/.test(requestUrl(args[0]))
+        ? Promise.resolve(
+            json({
+              orderId: 'order-1',
+              revision: 0,
+              lifecycleRevision: 0,
+              approval: null,
+              execution: null,
+              currentImplementationId: null,
+              integrationId: null,
+            }),
+          )
+        : fetchMock(...args),
   );
 });
 
