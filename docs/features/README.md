@@ -7,7 +7,7 @@
 - [Versionierte Auftragsentwürfe](orders.md)
 - [Lesbare Projektansichten](project-views.md)
 - [Feedback und Refinementquellen](feedback.md)
+- [Private Medien](media.md)
+- [Mobile Feedbackeingabe und Uploads](feedback-views.md)
 
 Nur implementierte Features werden hier aufgeführt. Weitere Planung steht im freigegebenen Bootstrap-Auftragsregister.
-
-- [Private Medien](media.md)
