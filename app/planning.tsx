@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { OrderFeedbackSources } from './feedback';
 import { OrderEvidencePanel } from './order-evidence';
+import { LatestVersion } from './versions';
 import { Frame, ProjectNavigation } from '@/components/project-frame';
 import { orderStatuses, orderTypes } from '@/lib/domain/planning';
 import type {
@@ -366,6 +367,7 @@ export function ProjectOverview({ projectId }: { projectId: string }) {
                 </p>
               )}
           </section>
+          <LatestVersion projectId={projectId} />
           <section className={panel} aria-label="Projekteinstellungen">
             <h2 className="mb-5 text-lg font-bold text-white">
               Projekteinstellungen

@@ -149,3 +149,11 @@ Die fortgesetzte Gesamtfreigabe autorisiert diese Fassungen v1 auf develop49c400
 **Kriterien:** PV-1 Versionsinhalt und Umfang unveränderlich, Auswahl oder vollständiger Milestone ohne Abschneiden; PV-2 aktuelle W5-Integration oder explizite öffentliche Bootstrapprovenienz erforderlich; PV-3 Buildhistorie trennt öffentliche und Hosting-SHAs, neueste Beobachtung je Ziel bestimmt Verfügbarkeit; PV-4 letzte verfügbare Version bleibt trotz neuer unverfügbarer Version sichtbar; PV-5 Produktionsrelease nur nach ausdrücklicher Freigabe, passendem verfügbarem Produktionsbuild und tatsächlichen Branch-/Tag-/CI-Fakten; PV-6 Revisionen, Replay, Cursor, Projektgrenzen und Rollback atomar.
 
 **Teststrategie:** PV-1–6 echte D1-Snapshot-/Grenz-/Verfügbarkeits-/Releaseprüfungen, native API/MCP-Verträge und echte temporäre Git-/Tagfixtures. **Voraussetzung:** LUUFI-14. **Ausschlüsse:** automatische Veröffentlichung, Runtime-GitHub-Credentials und Semverzwang. **Dokumentation:** Projektversionen fachlich/technisch und Releasehelper.
+
+### LUUFI-17 v1 – Versionen und Bereitstellungen lesen
+
+**Ergebnis:** Nutzer liest Versionen, Änderungen, statischen Auftragsumfang, Build-/Releasebelege und letzte verfügbare Version in deutscher mobiler Oberfläche.
+
+**Kriterien:** VV-1 öffentlicher Projektstand und privater Hostingstand getrennt; VV-2 Produktionskandidat ohne Release ausdrücklich kennzeichnen; VV-3 unabhängige Pagination, Lade-/Fehler-/Retry-/Kontextwechsel; VV-4 sichere Site-/APKLinks, fehlende Buildgründe und tatsächliche Releasefakten lesbar; VV-5 ältere verfügbare Version bleibt sichtbar.
+
+**Teststrategie:** VV-1–5 fokussierte UI-Interaktions-/Sicherheitsfälle und Desktop-/Handy-Browserablauf ausschließlich mit synthetischen Daten. **Voraussetzung:** LUUFI-16. **Ausschlüsse:** Browser-Schreibformulare und Releaseaktionen. **Dokumentation:** Versionsansichten.
