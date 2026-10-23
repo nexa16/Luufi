@@ -5,5 +5,6 @@
 - [Projektregistrierung und Konfiguration](projects.md)
 - [Geordnete Milestones](milestones.md)
 - [Versionierte Auftragsentwürfe](orders.md)
+- [Lesbare Projektansichten](project-views.md)
 
 Nur implementierte Features werden hier aufgeführt. Weitere Planung steht im freigegebenen Bootstrap-Auftragsregister.
