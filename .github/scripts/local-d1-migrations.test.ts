@@ -1,7 +1,7 @@
 /// <reference types="node" />
 
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -203,13 +203,11 @@ describe('local D1 migration wrapper', () => {
         created_at: 57,
       },
     ]);
-    expect(ledger.map((row) => row.name)).toEqual([
-      '0000_supreme_harrier.sql',
-      '0001_third_miss_america.sql',
-      '0002_sour_plazm.sql',
-      '0003_previous_moira_mactaggert.sql',
-      '0004_mcp_probe.sql',
-      '0005_ideas_revisions.sql',
-    ]);
+    const expectedMigrations = readdirSync(
+      path.join(migrations.REPOSITORY_ROOT, 'drizzle'),
+    )
+      .filter((name) => name.endsWith('.sql'))
+      .sort();
+    expect(ledger.map((row) => row.name)).toEqual(expectedMigrations);
   }, 30_000);
 });

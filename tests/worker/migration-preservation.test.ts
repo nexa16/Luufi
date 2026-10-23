@@ -4,9 +4,13 @@ import { expect, it } from 'vitest';
 import { platformReadiness } from '@/lib/services/deployment-identity';
 
 it('LUUFI-3 preserves legacy IDs, text, details and dates while adding revision zero', async () => {
-  const legacy = env.TEST_MIGRATIONS.filter((m) => !m.name.startsWith('0005'));
-  const additive = env.TEST_MIGRATIONS.filter((m) => m.name.startsWith('0005'));
-  expect(additive).toHaveLength(1);
+  const legacy = env.TEST_MIGRATIONS.filter(
+    (m) => Number(m.name.slice(0, 4)) < 5,
+  );
+  const additive = env.TEST_MIGRATIONS.filter(
+    (m) => Number(m.name.slice(0, 4)) >= 5,
+  );
+  expect(additive).toHaveLength(2);
   await applyD1Migrations(env.LEGACY_DB, legacy);
   expect(await platformReadiness({ ...env, DB: env.LEGACY_DB })).toEqual({
     status: 'unavailable',

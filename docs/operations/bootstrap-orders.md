@@ -16,7 +16,7 @@ Technische Voraussetzung, im getrennten privaten Preview-Quellspeicher implement
 
 **Teststrategie:** F-1 UI; F-2 Worker/API plus lokaler Auth-Grenztest; F-3 Unit+Worker sowie nativer Deployment-Smoke; F-4 Worker/Hash und exakter Quelldatenvergleich; F-5 bewusste Datei-/Historienprüfung und Migrationsinventar; F-6 GitHub-CI sowie statische Workflowprüfung. Kein manueller Nutzerabnahmezwang.
 
-**Voraussetzung:** Nativer LUUFI-1-Nachweis. **Ausschlüsse:** Projektverwaltung, Aufträge, Feedback, Medien, Produktionsrelease. **Dokumentation:** Feature Plattform, technische Grundlage und Betrieb. **Zustand:** In Implementierung bis Verifikation und Push; integriert erst nach bestätigtem develop-Merge.
+**Voraussetzung:** Nativer LUUFI-1-Nachweis. **Ausschlüsse:** Projektverwaltung, Aufträge, Feedback, Medien, Produktionsrelease. **Dokumentation:** Feature Plattform, technische Grundlage und Betrieb. **Zustand:** Zusammen mit LUUFI-3 in PR1 nach develop integriert (`f1b18e0d563283e4b8d89e5c73fa465304b7ce79`); Produktion bleibt separat freizugeben.
 
 ## LUUFI-3 v1 – Eigenständige Projektideen
 
@@ -28,4 +28,56 @@ Technische Voraussetzung, im getrennten privaten Preview-Quellspeicher implement
 
 **Teststrategie:** I-1 UI plus repräsentative echte D1-Browserabläufe in beiden Viewports; I-2 Domain+API; I-3 D1-Migrations-/CRUD-Regression; I-4/5 D1-Parallel-/Rollback-/Replay-Tests und MCP-Vertrag; I-6 HTTP/MCP-Sicherheitsfälle. Betroffene Regressionen: vorherige unabhängige Ideen, gleichbleibende Daten und primäre Navigation. Kein manueller Nutzerabnahmezwang.
 
-**Voraussetzung:** Geprüfter vorheriger LUUFI-2-Commit. **Ausschlüsse:** Automatische Projektumwandlung, Projektfeedback, Anhänge, Produktionsfreigabe. **Dokumentation:** Feature Projektideen, Datenmodell, API/MCP und Migration. **Zustand:** In Implementierung bis Verifikation und Push; integriert erst nach bestätigtem develop-Merge.
+**Voraussetzung:** Geprüfter vorheriger LUUFI-2-Commit. **Ausschlüsse:** Automatische Projektumwandlung, Projektfeedback, Anhänge, Produktionsfreigabe. **Dokumentation:** Feature Projektideen, Datenmodell, API/MCP und Migration. **Zustand:** Integriert mit LUUFI-2 in PR1; Merge `f1b18e0d563283e4b8d89e5c73fa465304b7ce79`. Keine Produktionsfreigabe.
+
+## Welle3: verbindliche Aufteilung der bestehenden Gesamtfreigabe
+
+Die folgenden Fassungen v1 konkretisieren ausschließlich den bereits freigegebenen Neubauplan. Kontext ist develop `f1b18e0d563283e4b8d89e5c73fa465304b7ce79`; Dokumentations-/Planungsrichtlinie1.0.0, Implementierungs-/Datenzugriffsrichtlinie1.0.1 nativ gelesen. Keine neue Produktentscheidung und keine Produktionsfreigabe. Zentrale Migrationen/Typen/Transaktionen beim Koordinator; getrennte Services und Leseansichten dürfen parallel entstehen.
+
+### LUUFI-4 v1 – Projekte und gemeinsame Planungspersistenz
+
+**Problem/Ergebnis:** Codex benötigt stabile Projektkonfiguration statt alter GitHub-Projektverknüpfung. Registrierung erzeugt dauerhaftes Kürzel, Konfiguration und eigenen atomaren Auftragszähler.
+
+**Kriterien:** P-1 eindeutiges unveränderliches Kürzel und relative Dokumentationspfade; P-2 registrieren/lesen/ändern über geschützten gemeinsamen Service und MCP; P-3 Revision, actor-/payload-gebundener Replay und vollständiger Transaktionsrollback; P-4 paginierte konfliktbewusste Listen; P-5 bestehende Ideen und Migrationen unverändert, Bootstrap1–9 reserviert.
+
+**Teststrategie:** P-1–4 echte D1-/MCP-/API-Tests, P-5 Migrationserhalt. **Voraussetzung:** integrierte LUUFI-2/3. **Ausschlüsse:** Projektanlage im Browser, Importdienst, GitHub-Sync. **Dokumentation:** Projekte und Planungskern.
+
+### LUUFI-5 v1 – Geordnete Milestones
+
+**Problem/Ergebnis:** Planungsabschnitte benötigen explizite Reihenfolge. Codex erstellt und bearbeitet offene Milestones und verschiebt sie vor einen Anker; die erste offene Position ist die nächste.
+
+**Kriterien:** M-1 Projektgrenzen und stabile IDs; M-2 revisioniertes Erstellen/Bearbeiten mit Replay; M-3 atomare, konfliktbewusste Reihenfolge und Cursor; M-4 geschlossene Ziele unverändert, leere Listen ehrlich.
+
+**Teststrategie:** M-1–4 D1-Services und MCP-Adapter, einschließlich konkurrierender Moves und Rollback. **Voraussetzung:** LUUFI-4. **Ausschlüsse:** Lifecycle/Schließen, Browsermutation. **Dokumentation:** Milestones fachlich/technisch.
+
+### LUUFI-6 v1 – Versionierte Entwurfsaufträge
+
+**Problem/Ergebnis:** Arbeit benötigt eigene unveränderliche IDs und nachvollziehbare Spezifikationsfassungen. Codex erstellt Entwürfe mit Titel/Ziel/Herkunft und überarbeitet sie in neuen historischen Fassungen.
+
+**Kriterien:** O-1 atomare eindeutige Nummern ohne Wiederverwendung, auch bei parallelem Create/Replay; O-2 unveränderliche historische Spezifikationen, getrennte specVersion/revision; O-3 filter-/seitenfähige Listen mit Konflikten; O-4 strikte Validierung und nur Entwurfsänderung, kein frei beschreibbarer Status.
+
+**Teststrategie:** O-1–4 D1-Konkurrenz-/Rollback-/Versions-/Filtertests plus MCP-Vertrag. **Voraussetzung:** LUUFI-4. **Ausschlüsse:** Freigaben, Ausführung und Git-Nachweise. **Dokumentation:** Aufträge fachlich/technisch.
+
+### LUUFI-7 v1 – Auftragszuordnung und Beziehungen
+
+**Problem/Ergebnis:** Entwürfe werden zu offenen Milestones geordnet und mit nachvollziehbaren Beziehungen verbunden, ohne Spezifikationshistorie zu verändern.
+
+**Kriterien:** R-1 explizite Reihenfolge/Anker und unverplante Aufträge; R-2 atomare Auftrags-/Planrevisionsprüfung; R-3 nur dasselbe Projekt, keine Selbstbeziehung und keine Abhängigkeitszyklen; R-4 Wiederholung/Rollback erhalten Ergebnis und Historie; R-5 laufende/abgeschlossene Planung sowie geschlossene Milestones geschützt.
+
+**Teststrategie:** R-1–5 D1-Reorder-/Graph-/Race-/Replay-Tests und MCP. **Voraussetzung:** LUUFI-5/6. **Ausschlüsse:** Lifecycle und automatische Freigaben. **Dokumentation:** Aufträge/Beziehungsmodell.
+
+### LUUFI-8 v1 – Projekt- und Milestone-Leseansichten
+
+**Problem/Ergebnis:** Nutzer sieht registrierte Projekte, Konfiguration und nächsten offenen Milestone auf Desktop/Handy.
+
+**Kriterien:** V-1 deutsche lesbare Navigation; V-2 Projektliste/Detail/Milestones mit Lade-/Leer-/Fehler-/Wiederholungszuständen; V-3 Seitennavigation ohne versteckte Datenauslassung; V-4 keine Browser-Verwaltungsaktionen.
+
+**Teststrategie:** V-1–4 fokussierte UI-Tests und repräsentative Browserprüfung gegen ausschließlich synthetische lokale D1-Daten. **Voraussetzung:** LUUFI-4/5. **Ausschlüsse:** Feedback/Versionen und Schreibformulare. **Dokumentation:** Projektansichten.
+
+### LUUFI-9 v1 – Lesbare Aufträge mit Filtern und Historie
+
+**Problem/Ergebnis:** Nutzer kann Aufträge nach Milestone/Zustand/Typ filtern und Fassung, Kriterien, Teststrategie, Herkunft und Beziehungen nachvollziehen.
+
+**Kriterien:** A-1 Liste/Filter/Pagination einschließlich unverplant; A-2 Detail mit stabiler Kennung, Status, Spezifikation, historischen Fassungen und Beziehungen; A-3 deutsche mobile Darstellung, sichere Fehler und veraltete Antworten werden verworfen.
+
+**Teststrategie:** A-1–3 UI-Tests und repräsentative echte lokale D1-Browserabläufe. **Voraussetzung:** LUUFI-6/7/8. **Ausschlüsse:** Browseränderung, Ausführung und Nachweislifecycle. **Dokumentation:** Projektansichten/Aufträge.

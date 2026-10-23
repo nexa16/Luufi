@@ -48,6 +48,24 @@ export async function platformReadiness(
     await bindings.DB.prepare(
       'SELECT request_key, operation, payload_json, result_json FROM idea_mutation_requests LIMIT 0',
     ).all();
+    await bindings.DB.prepare(
+      'SELECT id, project_key, planning_revision, next_order_number FROM planning_projects LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT id, project_id, position, revision FROM planning_milestones LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT id, project_id, number, spec_version, revision FROM planning_orders LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT order_id, version, spec_json FROM planning_order_versions LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT source_id, target_id, type FROM planning_order_relations LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT request_key, actor, operation, payload_json, result_json FROM planning_requests LIMIT 0',
+    ).all();
     return { status: 'ok' as const, ...identity };
   } catch {
     return { status: 'unavailable' as const };

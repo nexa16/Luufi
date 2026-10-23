@@ -133,6 +133,10 @@ describe('MCP proof JSON-RPC boundary', () => {
       'ideas_create',
       'ideas_update',
       'ideas_delete',
+      'projects_list',
+      'projects_get',
+      'projects_register',
+      'projects_update',
     ]);
     expect(
       response.result.tools.find((tool) => tool.name === 'probe_write'),

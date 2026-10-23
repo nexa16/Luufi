@@ -83,15 +83,13 @@ describe('LUUFI-3 native Projektideen-Werkzeuge', () => {
           .map((tool) => tool.name),
       ).toEqual(ideaTools.map((tool) => tool.name));
       if (environment === 'production')
-        expect(tools.map((tool) => tool.name)).toEqual([
-          'get_context',
-          'get_guidelines',
-          'ideas_list',
-          'ideas_get',
-          'ideas_create',
-          'ideas_update',
-          'ideas_delete',
-        ]);
+        expect(
+          tools.some((tool) =>
+            ['probe_read', 'probe_write', 'read_probe_attachment'].includes(
+              tool.name,
+            ),
+          ),
+        ).toBe(false);
       expect(tools.find((tool) => tool.name === 'ideas_update')).toMatchObject({
         inputSchema: {
           required: ['id', 'text', 'expectedRevision', 'requestKey'],

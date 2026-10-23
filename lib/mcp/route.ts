@@ -49,7 +49,7 @@ export async function dispatchMcp(
   const contentLength = request.headers.get('content-length');
   if (
     contentLength &&
-    (!/^\d+$/.test(contentLength) || Number(contentLength) > 16_384)
+    (!/^\d+$/.test(contentLength) || Number(contentLength) > 262_144)
   ) {
     return Response.json(
       { error: 'Anfrage zu groß.' },
@@ -66,7 +66,7 @@ export async function dispatchMcp(
       const chunk = await reader.read();
       if (chunk.done) break;
       length += chunk.value.byteLength;
-      if (length > 16_384) {
+      if (length > 262_144) {
         await reader.cancel();
         return Response.json(
           { error: 'Anfrage zu groß.' },

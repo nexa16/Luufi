@@ -4,6 +4,12 @@ import {
   isIdeaTool,
   validIdeaArguments,
 } from './ideas';
+import {
+  callPlanningTool,
+  isPlanningTool,
+  planningTools,
+  validPlanningArguments,
+} from './planning';
 
 export interface ProbeState {
   revision: number;
@@ -96,6 +102,7 @@ const tools = [
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
   ...ideaTools,
+  ...planningTools,
 ] as const;
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -146,6 +153,7 @@ function safeFailure(error: unknown) {
 
 function validArguments(name: string, args: Record<string, unknown>): boolean {
   if (isIdeaTool(name)) return validIdeaArguments(name, args);
+  if (isPlanningTool(name)) return validPlanningArguments(name, args);
   switch (name) {
     case 'get_context':
     case 'probe_read':
@@ -195,6 +203,8 @@ async function callTool(
   if (!deps.ownerId.trim()) return toolError('Zugriff nicht erlaubt.');
   try {
     if (isIdeaTool(name)) return await callIdeaTool(name, args, deps.ownerId);
+    if (isPlanningTool(name))
+      return await callPlanningTool(name, args, deps.ownerId);
     switch (name) {
       case 'get_context':
         return toolResult(await deps.getContext());
@@ -253,7 +263,8 @@ export async function handleMcpMessage(
     (tool) =>
       deps.environment === 'preview' ||
       ['get_guidelines', 'get_context'].includes(tool.name) ||
-      isIdeaTool(tool.name),
+      isIdeaTool(tool.name) ||
+      isPlanningTool(tool.name),
   );
   switch (message.method) {
     case 'server/discover':
@@ -289,10 +300,12 @@ export async function handleMcpMessage(
         return success(
           id,
           toolError(
-            isIdeaTool(params.name)
+            isIdeaTool(params.name) || isPlanningTool(params.name)
               ? JSON.stringify({
                   code: 'validation',
-                  error: 'Ungültige Projektideen-Werkzeugargumente.',
+                  error: isPlanningTool(params.name)
+                    ? 'Ungültige Planungs-Werkzeugargumente.'
+                    : 'Ungültige Projektideen-Werkzeugargumente.',
                 })
               : 'Ungültige Werkzeugargumente.',
           ),
