@@ -123,7 +123,7 @@ beforeEach(() => {
               integrationId: null,
             }),
           )
-        : /\/(latest-available-version)(?:\?|$)/.test(
+        : /\/(latest-available-version|bootstrap-provenance)(?:\?|$)/.test(
               requestUrl(args[0]),
             )
           ? Promise.resolve(json(null))

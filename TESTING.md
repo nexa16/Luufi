@@ -10,4 +10,6 @@ Auf ausdrücklichen Nutzerwunsch vom 23. Oktober 2026 gelten insgesamt mindesten
 
 `npm run test:ci` prüft Dokumentationsstruktur, Unit-, UI- und Worker-Tests einmal mit Coverage sowie Desktop-/Handy-Browserabläufe. Die Tests werden dabei nicht zusätzlich ohne Coverage doppelt ausgeführt. GitHub CI ergänzt Typprüfung, Lint und Produktionsbuild. Live-Plattformsmoke erfolgt nach Preview-Deployment mit exaktem SHA/Branch/Umgebung und bleibt vom deterministischen PR-Gate getrennt.
 
+Der PR prüft den Integrationsstand vor dem geschützten develop-Merge. Der folgende technische Mergecommit startet keine zweite identische Coverage-Runde. Eine ausdrücklich freigegebene Produktionspromotion erhält weiterhin CI auf dem exakten main-Head; main wird nie automatisch integriert.
+
 Lokale Browserprüfungen verwenden eine ausdrücklich als `local` konfigurierte Instanz mit Testdaten und Loopback-Zugang. Dieser Modus wird in Preview/Produktion niemals als Authentifizierung akzeptiert.

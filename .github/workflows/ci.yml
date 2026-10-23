@@ -3,7 +3,10 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop, main]
+    # PRs verify the integrated source graph before develop can merge.
+    # Avoid running the same coverage gate again for its merge commit.
+    # Production still needs evidence on its exact promoted main head.
+    branches: [main]
 permissions:
   contents: read
 concurrency:

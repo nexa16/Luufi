@@ -157,3 +157,11 @@ Die fortgesetzte Gesamtfreigabe autorisiert diese Fassungen v1 auf develop49c400
 **Kriterien:** VV-1 öffentlicher Projektstand und privater Hostingstand getrennt; VV-2 Produktionskandidat ohne Release ausdrücklich kennzeichnen; VV-3 unabhängige Pagination, Lade-/Fehler-/Retry-/Kontextwechsel; VV-4 sichere Site-/APKLinks, fehlende Buildgründe und tatsächliche Releasefakten lesbar; VV-5 ältere verfügbare Version bleibt sichtbar.
 
 **Teststrategie:** VV-1–5 fokussierte UI-Interaktions-/Sicherheitsfälle und Desktop-/Handy-Browserablauf ausschließlich mit synthetischen Daten. **Voraussetzung:** LUUFI-16. **Ausschlüsse:** Browser-Schreibformulare und Releaseaktionen. **Dokumentation:** Versionsansichten.
+
+### LUUFI-18 v1 – Bootstrap und geprüfte Wiederherstellung
+
+**Ergebnis:** Festes Manifest1–18 übernimmt tatsächliche Neubauprovenienz getrennt von späteren Freigaben; lokale Kerndatensicherung wird durch echte isolierte Wiederherstellung geprüft.
+
+**Kriterien:** B-1 stabile IDs und feste Spezifikationen ohne allgemeinen Import; B-2 private Sites-Proofprovenienz1 und öffentliche Gitprovenienz2–18 getrennt, keine erfundenen Claims/Freigaben; B-3 atomarer kollisionssicherer idempotenter Abgleich, vorhandene Projekt-ID und spätere Nummern>=19 erhalten; B-4 vollständige allowlisted Rows, unveränderte Migrationshashes, Referenzen und fertige Medienbytes prüfen; B-5 Recovery überschreibt keine vorhandene Datei und behauptet keine Sicherung alter OAuth-/Token-/Cacheinhalte; B-6 private Live-Payloads bleiben außerhalb öffentlicher Fixtures.
+
+**Teststrategie:** B-1–3 echte D1-/Replay-/Race-/Rollback-/Konfliktfälle und API/MCP; B-4–6 echte SQLite-/Dateihashfixtures plus tatsächlicher privater Restore durch Codex. **Voraussetzung:** LUUFI-16/17. **Ausschlüsse:** generische SQL-/Import-/Backup-Runtime, Produktionsübertragung und neue historische Freigaben. **Dokumentation:** Bootstrap und Recoverybetrieb. Tatsächliche native Installation benötigt den aktualisierten Werkzeugkatalog; bereitgestellter Code bedeutet noch keine installierten Live-Daten.

@@ -1,4 +1,10 @@
 import {
+  callBootstrapTool,
+  bootstrapTools,
+  isBootstrapTool,
+  validBootstrapArguments,
+} from './bootstrap';
+import {
   callReleaseTool,
   releaseTools,
   isReleaseTool,
@@ -131,6 +137,7 @@ const tools = [
   ...mediaTools,
   ...executionTools,
   ...releaseTools,
+  ...bootstrapTools,
 ] as const;
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -186,6 +193,7 @@ function validArguments(name: string, args: Record<string, unknown>): boolean {
   if (isMediaTool(name)) return validMediaArguments(name, args);
   if (isExecutionTool(name)) return validExecutionArguments(name, args);
   if (isReleaseTool(name)) return validReleaseArguments(name, args);
+  if (isBootstrapTool(name)) return validBootstrapArguments(name, args);
   switch (name) {
     case 'get_context':
     case 'probe_read':
@@ -244,6 +252,8 @@ async function callTool(
       return await callExecutionTool(name, args, deps.ownerId);
     if (isReleaseTool(name))
       return await callReleaseTool(name, args, deps.ownerId);
+    if (isBootstrapTool(name))
+      return await callBootstrapTool(name, args, deps.ownerId);
     switch (name) {
       case 'get_context':
         return toolResult(await deps.getContext());
@@ -307,7 +317,8 @@ export async function handleMcpMessage(
       isFeedbackTool(tool.name) ||
       isMediaTool(tool.name) ||
       isExecutionTool(tool.name) ||
-      isReleaseTool(tool.name),
+      isReleaseTool(tool.name) ||
+      isBootstrapTool(tool.name),
   );
   switch (message.method) {
     case 'server/discover':
@@ -348,10 +359,13 @@ export async function handleMcpMessage(
               isFeedbackTool(params.name) ||
               isMediaTool(params.name) ||
               isExecutionTool(params.name) ||
-              isReleaseTool(params.name)
+              isReleaseTool(params.name) ||
+              isBootstrapTool(params.name)
               ? JSON.stringify({
                   code: 'validation',
-                  error: isReleaseTool(params.name)
+                  error: isBootstrapTool(params.name)
+                    ? 'Ungültige Bootstrap-Werkzeugargumente.'
+                    : isReleaseTool(params.name)
                       ? 'Ungültige Versions-Werkzeugargumente.'
                       : isExecutionTool(params.name)
                         ? 'Ungültige Ausführungs-Werkzeugargumente.'

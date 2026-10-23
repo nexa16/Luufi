@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { OrderFeedbackSources } from './feedback';
 import { OrderEvidencePanel } from './order-evidence';
 import { LatestVersion } from './versions';
+import { OrderBootstrapProvenance } from './order-bootstrap';
 import { Frame, ProjectNavigation } from '@/components/project-frame';
 import { orderStatuses, orderTypes } from '@/lib/domain/planning';
 import type {
@@ -923,6 +924,7 @@ export function OrderDetail({
             <SpecView spec={snapshot?.spec ?? order.data.spec} />
           </section>
           <OrderEvidencePanel projectId={projectId} orderId={orderId} />
+          <OrderBootstrapProvenance projectId={projectId} orderId={orderId} />
           <OrderFeedbackSources projectId={projectId} orderId={orderId} />
           <section className={panel} aria-label="Ausgehende Beziehungen">
             <h2 className="mb-3 text-lg font-bold text-white">
