@@ -118,6 +118,49 @@ export const planningTools = [
     { id, ...config, expectedRevision: revision, requestKey },
     ['id', 'name', 'repository', 'expectedRevision', 'requestKey'],
   ),
+  tool(
+    'milestones_list',
+    'Liest Milestones in ihrer ausdrücklichen Reihenfolge.',
+    { ...projectId, ...page },
+    ['projectId'],
+    true,
+  ),
+  tool(
+    'milestones_get',
+    'Liest einen projektzugehörigen Milestone.',
+    entity,
+    ['projectId', 'id'],
+    true,
+  ),
+  tool(
+    'milestones_create',
+    'Erstellt einen offenen Milestone am Ende der Planung.',
+    { ...projectId, title: str(280), description: optionalText(), requestKey },
+    ['projectId', 'title', 'requestKey'],
+  ),
+  tool(
+    'milestones_update',
+    'Bearbeitet einen offenen Milestone mit Revisionsprüfung.',
+    {
+      ...entity,
+      title: str(280),
+      description: optionalText(),
+      expectedRevision: revision,
+      requestKey,
+    },
+    ['projectId', 'id', 'title', 'expectedRevision', 'requestKey'],
+  ),
+  tool(
+    'milestones_move',
+    'Verschiebt einen offenen Milestone vor einen Anker; null hängt an.',
+    {
+      ...entity,
+      beforeId: nullableId,
+      expectedPlanningRevision: revision,
+      requestKey,
+    },
+    ['projectId', 'id', 'beforeId', 'expectedPlanningRevision', 'requestKey'],
+  ),
 ];
 
 // A bounded subset matching exactly our static discovery schemas.
@@ -187,6 +230,7 @@ export async function callPlanningTool(
   const { PlanningError } = await import('@/lib/services/planning-store');
   try {
     const projects = await import('@/lib/services/projects');
+    const milestones = await import('@/lib/services/milestones');
     const p = args.projectId as string,
       id = args.id as string,
       key = args.requestKey as string,
@@ -218,6 +262,46 @@ export async function callPlanningTool(
         );
         break;
       }
+      case 'milestones_list':
+        result = await milestones.listMilestones(actor, p, args);
+        break;
+      case 'milestones_get':
+        result = await milestones.getMilestone(actor, p, id);
+        break;
+      case 'milestones_create':
+        result = await milestones.createMilestone(
+          actor,
+          p,
+          {
+            title: args.title as string,
+            description: args.description as string | undefined,
+          },
+          key,
+        );
+        break;
+      case 'milestones_update':
+        result = await milestones.updateMilestone(
+          actor,
+          p,
+          id,
+          {
+            title: args.title as string,
+            description: args.description as string | undefined,
+          },
+          rev,
+          key,
+        );
+        break;
+      case 'milestones_move':
+        result = await milestones.moveMilestone(
+          actor,
+          p,
+          id,
+          args.beforeId as string | null,
+          args.expectedPlanningRevision as number,
+          key,
+        );
+        break;
       default:
         throw new PlanningError('validation', 'Unbekanntes Planungswerkzeug.');
     }
