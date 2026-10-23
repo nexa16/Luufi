@@ -199,6 +199,39 @@ export const planningTools = [
     },
     ['projectId', 'id', 'type', 'spec', 'expectedRevision', 'requestKey'],
   ),
+  tool(
+    'orders_place',
+    'Ordnet einen Auftrag und verschiebt ihn innerhalb eines offenen Plans.',
+    {
+      ...entity,
+      milestoneId: nullableId,
+      beforeId: nullableId,
+      expectedRevision: revision,
+      expectedPlanningRevision: revision,
+      requestKey,
+    },
+    [
+      'projectId',
+      'id',
+      'milestoneId',
+      'beforeId',
+      'expectedRevision',
+      'expectedPlanningRevision',
+      'requestKey',
+    ],
+  ),
+  tool(
+    'orders_relation_set',
+    'Verknüpft Aufträge im selben Projekt; Abhängigkeiten müssen zyklenfrei bleiben.',
+    relation,
+    Object.keys(relation),
+  ),
+  tool(
+    'orders_relation_remove',
+    'Entfernt eine vorhandene Auftragsbeziehung mit Revisionsprüfung.',
+    relation,
+    Object.keys(relation),
+  ),
 ];
 
 // A bounded subset matching exactly our static discovery schemas.
@@ -363,6 +396,40 @@ export async function callPlanningTool(
           p,
           id,
           { type: args.type, spec: args.spec } as never,
+          rev,
+          key,
+        );
+        break;
+      case 'orders_place':
+        result = await orders.placeOrder(
+          actor,
+          p,
+          id,
+          args.milestoneId as string | null,
+          args.beforeId as string | null,
+          rev,
+          args.expectedPlanningRevision as number,
+          key,
+        );
+        break;
+      case 'orders_relation_set':
+        result = await orders.setOrderRelation(
+          actor,
+          p,
+          id,
+          args.targetId as string,
+          args.type as never,
+          rev,
+          key,
+        );
+        break;
+      case 'orders_relation_remove':
+        result = await orders.removeOrderRelation(
+          actor,
+          p,
+          id,
+          args.targetId as string,
+          args.type as never,
           rev,
           key,
         );

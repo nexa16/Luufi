@@ -206,3 +206,60 @@ it('verlangt echte Sites-Identität und lehnt zusätzliche Zustands-/Identitäts
     ).status,
   ).toBe(401);
 });
+
+it('LUUFI-7 verbindet Zuordnung, Graphschutz und ursprüngliche Replay-Antworten über MCP', async () => {
+  const p = await project();
+  const m = await call('milestones_create', {
+    projectId: p.id,
+    title: 'Plan',
+    requestKey: 'm',
+  });
+  const input = {
+    projectId: p.id,
+    type: 'feature',
+    spec: { title: 'Entwurf', goal: 'Ziel', origin: 'Chat' },
+  };
+  const a = await call('orders_create', { ...input, requestKey: 'a' });
+  const b = await call('orders_create', { ...input, requestKey: 'b' });
+  expect(
+    await call('orders_place', {
+      projectId: p.id,
+      id: a.id,
+      milestoneId: m.id,
+      beforeId: null,
+      expectedRevision: 0,
+      expectedPlanningRevision: 3,
+      requestKey: 'place',
+    }),
+  ).toMatchObject({ milestoneId: m.id, revision: 1, specVersion: 1 });
+  const edge = {
+    projectId: p.id,
+    id: a.id,
+    targetId: b.id,
+    type: 'depends_on',
+    expectedRevision: 1,
+    requestKey: 'edge',
+  };
+  const linked = await call('orders_relation_set', edge);
+  expect(linked).toMatchObject({
+    revision: 2,
+    relations: [{ targetId: b.id, type: 'depends_on' }],
+  });
+  expect(
+    await call('orders_relation_set', {
+      ...edge,
+      id: b.id,
+      targetId: a.id,
+      expectedRevision: 0,
+      requestKey: 'cycle',
+    }),
+  ).toMatchObject({ isError: true, code: 'conflict' });
+  expect(
+    await call('orders_relation_remove', {
+      ...edge,
+      expectedRevision: 2,
+      requestKey: 'remove',
+    }),
+  ).toMatchObject({ revision: 3, relations: [] });
+  expect(await call('orders_relation_set', edge)).toEqual(linked);
+});

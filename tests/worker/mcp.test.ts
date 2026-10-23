@@ -224,6 +224,9 @@ describe('LUUFI-2 native Plattform-MCP', () => {
       'orders_get',
       'orders_create',
       'orders_update_draft',
+      'orders_place',
+      'orders_relation_set',
+      'orders_relation_remove',
     ]);
     for (const name of ['probe_read', 'probe_write', 'read_probe_attachment']) {
       expect(

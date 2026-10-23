@@ -2,11 +2,13 @@ import { getD1 } from '@/lib/data/d1';
 import {
   orderStatuses,
   orderTypes,
+  relationTypes,
   type Order,
   type OrderFilters,
   type OrderSpec,
   type OrderType,
   type Page,
+  type RelationType,
 } from '@/lib/domain/planning';
 import {
   authorizePlanning,
@@ -14,7 +16,7 @@ import {
   planningId,
   planningMutation,
   planningPage,
-  planningReplay,
+  planningAttempt,
   planningStorage,
   planningText,
   PlanningError,
@@ -305,53 +307,52 @@ export async function createOrder(
   planningId(projectId);
   const content = normalized(input);
   const payload = { projectId, ...content };
-  const replay = await planningReplay<Order>(
+  return planningAttempt<Order>(
     actor,
     'order.create',
     payload,
     requestKey,
-  );
-  if (replay !== undefined) return replay;
-  return planningStorage(async () => {
-    await projectState(projectId);
-    const id = crypto.randomUUID();
-    const createdAt = new Date().toISOString();
-    return planningMutation<Order>({
-      actor,
-      operation: 'order.create',
-      payload,
-      key: requestKey,
-      guard: sql(
-        'EXISTS(SELECT 1 FROM planning_projects WHERE id=? AND next_order_number < ?)',
-        projectId,
-        Number.MAX_SAFE_INTEGER,
-      ),
-      writes: (gate) => [
-        sql(
-          `UPDATE planning_projects SET next_order_number=next_order_number+1,planning_revision=planning_revision+1 WHERE id=? AND ${gate.sql}`,
+    async () => {
+      await projectState(projectId);
+      const id = crypto.randomUUID();
+      const createdAt = new Date().toISOString();
+      return planningMutation<Order>({
+        actor,
+        operation: 'order.create',
+        payload,
+        key: requestKey,
+        guard: sql(
+          'EXISTS(SELECT 1 FROM planning_projects WHERE id=? AND next_order_number < ?)',
           projectId,
-          ...gate.params!,
+          Number.MAX_SAFE_INTEGER,
         ),
-        sql(
-          `INSERT INTO planning_orders(id,project_id,number,type,status,spec_version,revision,milestone_id,position)
+        writes: (gate) => [
+          sql(
+            `UPDATE planning_projects SET next_order_number=next_order_number+1,planning_revision=planning_revision+1 WHERE id=? AND ${gate.sql}`,
+            projectId,
+            ...gate.params!,
+          ),
+          sql(
+            `INSERT INTO planning_orders(id,project_id,number,type,status,spec_version,revision,milestone_id,position)
           SELECT ?,p.id,p.next_order_number-1,?,'draft',1,0,NULL,COALESCE((SELECT MAX(position)+1 FROM planning_orders WHERE project_id=p.id AND milestone_id IS NULL),0)
           FROM planning_projects p WHERE p.id=? AND ${gate.sql}`,
-          id,
-          content.type,
-          projectId,
-          ...gate.params!,
-        ),
-        sql(
-          `INSERT INTO planning_order_versions(order_id,version,spec_json,created_at) SELECT ?,1,?,? WHERE ${gate.sql}`,
-          id,
-          JSON.stringify(content.spec),
-          createdAt,
-          ...gate.params!,
-        ),
-      ],
-      result: orderResult(projectId, id),
-    });
-  });
+            id,
+            content.type,
+            projectId,
+            ...gate.params!,
+          ),
+          sql(
+            `INSERT INTO planning_order_versions(order_id,version,spec_json,created_at) SELECT ?,1,?,? WHERE ${gate.sql}`,
+            id,
+            JSON.stringify(content.spec),
+            createdAt,
+            ...gate.params!,
+          ),
+        ],
+        result: orderResult(projectId, id),
+      });
+    },
+  );
 }
 
 export async function updateDraftOrder(
@@ -368,47 +369,353 @@ export async function updateDraftOrder(
   expectedRevision(revision);
   const content = normalized(input);
   const payload = { projectId, id, ...content, expectedRevision: revision };
-  const replay = await planningReplay<Order>(
+  return planningAttempt<Order>(
     actor,
     'order.update',
     payload,
     requestKey,
-  );
-  if (replay !== undefined) return replay;
-  return planningStorage(async () => {
-    await getOrder(actor, projectId, id);
-    return planningMutation<Order>({
-      actor,
-      operation: 'order.update',
-      payload,
-      key: requestKey,
-      guard: sql(
-        "EXISTS(SELECT 1 FROM planning_orders WHERE id=? AND project_id=? AND revision=? AND status='draft')",
-        id,
-        projectId,
-        revision,
-      ),
-      writes: (gate) => [
-        sql(
-          `UPDATE planning_orders SET type=?,spec_version=spec_version+1,revision=revision+1 WHERE id=? AND ${gate.sql}`,
-          content.type,
+    async () => {
+      await getOrder(actor, projectId, id);
+      return planningMutation<Order>({
+        actor,
+        operation: 'order.update',
+        payload,
+        key: requestKey,
+        guard: sql(
+          "EXISTS(SELECT 1 FROM planning_orders WHERE id=? AND project_id=? AND revision=? AND status='draft')",
           id,
-          ...gate.params!,
-        ),
-        sql(
-          `INSERT INTO planning_order_versions(order_id,version,spec_json,created_at) SELECT id,spec_version,?,? FROM planning_orders WHERE id=? AND ${gate.sql}`,
-          JSON.stringify(content.spec),
-          new Date().toISOString(),
-          id,
-          ...gate.params!,
-        ),
-        sql(
-          `UPDATE planning_projects SET planning_revision=planning_revision+1 WHERE id=? AND ${gate.sql}`,
           projectId,
-          ...gate.params!,
+          revision,
         ),
-      ],
-      result: orderResult(projectId, id),
-    });
-  });
+        writes: (gate) => [
+          sql(
+            `UPDATE planning_orders SET type=?,spec_version=spec_version+1,revision=revision+1 WHERE id=? AND ${gate.sql}`,
+            content.type,
+            id,
+            ...gate.params!,
+          ),
+          sql(
+            `INSERT INTO planning_order_versions(order_id,version,spec_json,created_at) SELECT id,spec_version,?,? FROM planning_orders WHERE id=? AND ${gate.sql}`,
+            JSON.stringify(content.spec),
+            new Date().toISOString(),
+            id,
+            ...gate.params!,
+          ),
+          sql(
+            `UPDATE planning_projects SET planning_revision=planning_revision+1 WHERE id=? AND ${gate.sql}`,
+            projectId,
+            ...gate.params!,
+          ),
+        ],
+        result: orderResult(projectId, id),
+      });
+    },
+  );
+}
+
+// LUUFI-7: planning placement and directed relations keep specification
+// snapshots unchanged. All mutable membership/dependency checks run in guard.
+type PlacementRow = { id: string; milestone_id: string | null };
+function placementConflict(): never {
+  throw new PlanningError(
+    'conflict',
+    'Die Zuordnung ist nicht mehr möglich. Bitte lade den Projektplan erneut.',
+  );
+}
+
+function editableOrder(projectId: string, id: string, revision: number) {
+  return sql(
+    `EXISTS(SELECT 1 FROM planning_orders s WHERE s.id=? AND s.project_id=? AND s.revision=? AND s.status IN ('draft','ready')
+    AND (s.milestone_id IS NULL OR EXISTS(SELECT 1 FROM planning_milestones sm WHERE sm.id=s.milestone_id AND sm.project_id=s.project_id AND sm.state='open')))`,
+    id,
+    projectId,
+    revision,
+  );
+}
+
+export async function placeOrder(
+  actor: string,
+  projectId: string,
+  id: string,
+  milestoneId: string | null,
+  beforeId: string | null,
+  revision: number,
+  planningRevision: number,
+  requestKey: string,
+): Promise<Order> {
+  authorizePlanning(actor);
+  planningId(projectId);
+  planningId(id);
+  if (milestoneId !== null) planningId(milestoneId);
+  if (beforeId !== null) planningId(beforeId);
+  expectedRevision(revision);
+  expectedRevision(planningRevision);
+  const payload = {
+    projectId,
+    id,
+    milestoneId,
+    beforeId,
+    expectedRevision: revision,
+    expectedPlanningRevision: planningRevision,
+  };
+  return planningAttempt<Order>(
+    actor,
+    'order.place',
+    payload,
+    requestKey,
+    async () => {
+      await getOrder(actor, projectId, id);
+      const db = getD1();
+      const snapshot = await db.batch([
+        db
+          .prepare(
+            'SELECT id,milestone_id FROM planning_orders WHERE project_id=? ORDER BY position,id',
+          )
+          .bind(projectId),
+        db
+          .prepare('SELECT planning_revision FROM planning_projects WHERE id=?')
+          .bind(projectId),
+      ]);
+      if (
+        (snapshot[1].results[0] as ProjectState | undefined)
+          ?.planning_revision !== planningRevision
+      )
+        placementConflict();
+      const rows = snapshot[0].results as PlacementRow[];
+      const source = rows.find((row) => row.id === id);
+      if (!source || beforeId === id) placementConflict();
+      const target = rows
+        .filter((row) => row.milestone_id === milestoneId && row.id !== id)
+        .map((row) => row.id);
+      const index =
+        beforeId === null ? target.length : target.indexOf(beforeId);
+      if (index < 0) placementConflict();
+      target.splice(index, 0, id);
+      const groups =
+        source.milestone_id === milestoneId
+          ? [target]
+          : [
+              rows
+                .filter(
+                  (row) =>
+                    row.milestone_id === source.milestone_id && row.id !== id,
+                )
+                .map((row) => row.id),
+              target,
+            ];
+      const editable = editableOrder(projectId, id, revision);
+      const milestoneGuard =
+        milestoneId === null
+          ? sql('1')
+          : sql(
+              "EXISTS(SELECT 1 FROM planning_milestones WHERE id=? AND project_id=? AND state='open')",
+              milestoneId,
+              projectId,
+            );
+      const anchorGuard =
+        beforeId === null
+          ? sql('1')
+          : sql(
+              'EXISTS(SELECT 1 FROM planning_orders WHERE id=? AND project_id=? AND milestone_id IS ? AND id<>?)',
+              beforeId,
+              projectId,
+              milestoneId,
+              id,
+            );
+      return planningMutation<Order>({
+        actor,
+        operation: 'order.place',
+        payload,
+        key: requestKey,
+        guard: sql(
+          `(${editable.sql}) AND EXISTS(SELECT 1 FROM planning_projects WHERE id=? AND planning_revision=?) AND (${milestoneGuard.sql}) AND (${anchorGuard.sql})`,
+          ...editable.params!,
+          projectId,
+          planningRevision,
+          ...milestoneGuard.params!,
+          ...anchorGuard.params!,
+        ),
+        writes: (gate) => [
+          sql(
+            `UPDATE planning_orders SET milestone_id=?,revision=revision+1 WHERE id=? AND ${gate.sql}`,
+            milestoneId,
+            id,
+            ...gate.params!,
+          ),
+          ...groups.map((group) => {
+            const ids = JSON.stringify(group);
+            return sql(
+              `UPDATE planning_orders SET position=(SELECT CAST(key AS INTEGER) FROM json_each(?) WHERE value=planning_orders.id) WHERE project_id=? AND id IN (SELECT value FROM json_each(?)) AND ${gate.sql}`,
+              ids,
+              projectId,
+              ids,
+              ...gate.params!,
+            );
+          }),
+          sql(
+            `UPDATE planning_projects SET planning_revision=planning_revision+1 WHERE id=? AND ${gate.sql}`,
+            projectId,
+            ...gate.params!,
+          ),
+        ],
+        result: orderResult(projectId, id),
+      });
+    },
+  );
+}
+
+async function mutateRelation(
+  remove: boolean,
+  actor: string,
+  projectId: string,
+  id: string,
+  targetId: string,
+  type: RelationType,
+  revision: number,
+  requestKey: string,
+): Promise<Order> {
+  authorizePlanning(actor);
+  planningId(projectId);
+  planningId(id);
+  planningId(targetId);
+  expectedRevision(revision);
+  if (!relationTypes.includes(type))
+    throw new PlanningError('validation', 'Der Beziehungstyp ist ungültig.');
+  const operation = remove ? 'order.relation.remove' : 'order.relation.set';
+  const payload = { projectId, id, targetId, type, expectedRevision: revision };
+  return planningAttempt<Order>(
+    actor,
+    operation,
+    payload,
+    requestKey,
+    async () => {
+      await getOrder(actor, projectId, id);
+      const target = await getD1()
+        .prepare('SELECT project_id FROM planning_orders WHERE id=?')
+        .bind(targetId)
+        .first<{ project_id: string }>();
+      if (!target)
+        throw new PlanningError(
+          'not_found',
+          'Der Zielauftrag wurde nicht gefunden.',
+        );
+      if (target.project_id !== projectId || id === targetId)
+        throw new PlanningError(
+          'conflict',
+          'Auftragsbeziehungen benötigen unterschiedliche Aufträge desselben Projekts.',
+        );
+      if (
+        remove &&
+        !(await getD1()
+          .prepare(
+            'SELECT 1 FROM planning_order_relations WHERE source_id=? AND target_id=? AND type=?',
+          )
+          .bind(id, targetId, type)
+          .first())
+      )
+        throw new PlanningError(
+          'not_found',
+          'Diese Auftragsbeziehung wurde nicht gefunden.',
+        );
+      const editable = editableOrder(projectId, id, revision);
+      const acyclic =
+        !remove && type === 'depends_on'
+          ? sql(
+              `NOT EXISTS(WITH RECURSIVE reachable(id) AS (
+          SELECT ? UNION SELECT r.target_id FROM planning_order_relations r JOIN reachable v ON r.source_id=v.id WHERE r.type='depends_on'
+        ) SELECT 1 FROM reachable WHERE id=?)`,
+              targetId,
+              id,
+            )
+          : sql('1');
+      return planningMutation<Order>({
+        actor,
+        operation,
+        payload,
+        key: requestKey,
+        guard: sql(
+          `(${editable.sql}) AND EXISTS(SELECT 1 FROM planning_orders t WHERE t.id=? AND t.project_id=?
+          AND (t.milestone_id IS NULL OR EXISTS(SELECT 1 FROM planning_milestones tm WHERE tm.id=t.milestone_id AND tm.project_id=t.project_id AND tm.state='open')))
+        AND ${remove ? '' : 'NOT '}EXISTS(SELECT 1 FROM planning_order_relations WHERE source_id=? AND target_id=? AND type=?) AND (${acyclic.sql})`,
+          ...editable.params!,
+          targetId,
+          projectId,
+          id,
+          targetId,
+          type,
+          ...acyclic.params!,
+        ),
+        writes: (gate) => [
+          remove
+            ? sql(
+                `DELETE FROM planning_order_relations WHERE source_id=? AND target_id=? AND type=? AND ${gate.sql}`,
+                id,
+                targetId,
+                type,
+                ...gate.params!,
+              )
+            : sql(
+                `INSERT INTO planning_order_relations(source_id,target_id,type) SELECT ?,?,? WHERE ${gate.sql}`,
+                id,
+                targetId,
+                type,
+                ...gate.params!,
+              ),
+          sql(
+            `UPDATE planning_orders SET revision=revision+1 WHERE id=? AND ${gate.sql}`,
+            id,
+            ...gate.params!,
+          ),
+          sql(
+            `UPDATE planning_projects SET planning_revision=planning_revision+1 WHERE id=? AND ${gate.sql}`,
+            projectId,
+            ...gate.params!,
+          ),
+        ],
+        result: orderResult(projectId, id),
+      });
+    },
+  );
+}
+
+export function setOrderRelation(
+  actor: string,
+  projectId: string,
+  id: string,
+  targetId: string,
+  type: RelationType,
+  revision: number,
+  requestKey: string,
+): Promise<Order> {
+  return mutateRelation(
+    false,
+    actor,
+    projectId,
+    id,
+    targetId,
+    type,
+    revision,
+    requestKey,
+  );
+}
+
+export function removeOrderRelation(
+  actor: string,
+  projectId: string,
+  id: string,
+  targetId: string,
+  type: RelationType,
+  revision: number,
+  requestKey: string,
+): Promise<Order> {
+  return mutateRelation(
+    true,
+    actor,
+    projectId,
+    id,
+    targetId,
+    type,
+    revision,
+    requestKey,
+  );
 }
