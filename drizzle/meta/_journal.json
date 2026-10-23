@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788992245313,
+      "tag": "0000_supreme_harrier",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789818785577,
+      "tag": "0001_third_miss_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789826715079,
+      "tag": "0002_sour_plazm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789887122852,
+      "tag": "0003_previous_moira_mactaggert",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792739525849,
+      "tag": "0004_mcp_probe",
+      "breakpoints": true
+    }
+  ]
+}
