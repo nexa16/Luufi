@@ -7,6 +7,7 @@ export default defineConfig({
       'lib/domain/**/*.test.ts',
       'lib/services/deployment-identity.test.ts',
       '.github/scripts/**/*.test.ts',
+      'scripts/**/*.test.ts',
     ],
     allowOnly: false,
     coverage: {
@@ -17,6 +18,7 @@ export default defineConfig({
         'lib/domain/**/*.ts',
         'lib/services/deployment-identity.ts',
         '.github/scripts/*.cjs',
+        'scripts/verify-order-git.mjs',
       ],
       exclude: ['**/*.test.*'],
       thresholds: {

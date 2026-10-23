@@ -10,5 +10,6 @@
 - [Private Medien](media.md)
 - [Mobile Feedbackeingabe und Uploads](feedback-views.md)
 - [Freigaben und exklusive Auftragsbearbeitung](order-execution.md)
+- [Prüf- und Gitnachweise](order-evidence.md)
 
 Nur implementierte Features werden hier aufgeführt. Weitere Planung steht im freigegebenen Bootstrap-Auftragsregister.

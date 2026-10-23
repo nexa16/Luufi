@@ -1,4 +1,10 @@
 import {
+  callExecutionTool,
+  executionTools,
+  isExecutionTool,
+  validExecutionArguments,
+} from './execution';
+import {
   callMediaTool,
   mediaTools,
   isMediaTool,
@@ -117,6 +123,7 @@ const tools = [
   ...planningTools,
   ...feedbackTools,
   ...mediaTools,
+  ...executionTools,
 ] as const;
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -170,6 +177,7 @@ function validArguments(name: string, args: Record<string, unknown>): boolean {
   if (isPlanningTool(name)) return validPlanningArguments(name, args);
   if (isFeedbackTool(name)) return validFeedbackArguments(name, args);
   if (isMediaTool(name)) return validMediaArguments(name, args);
+  if (isExecutionTool(name)) return validExecutionArguments(name, args);
   switch (name) {
     case 'get_context':
     case 'probe_read':
@@ -224,6 +232,8 @@ async function callTool(
     if (isFeedbackTool(name))
       return await callFeedbackTool(name, args, deps.ownerId);
     if (isMediaTool(name)) return await callMediaTool(name, args, deps.ownerId);
+    if (isExecutionTool(name))
+      return await callExecutionTool(name, args, deps.ownerId);
     switch (name) {
       case 'get_context':
         return toolResult(await deps.getContext());
@@ -285,7 +295,8 @@ export async function handleMcpMessage(
       isIdeaTool(tool.name) ||
       isPlanningTool(tool.name) ||
       isFeedbackTool(tool.name) ||
-      isMediaTool(tool.name),
+      isMediaTool(tool.name) ||
+      isExecutionTool(tool.name),
   );
   switch (message.method) {
     case 'server/discover':
@@ -324,11 +335,13 @@ export async function handleMcpMessage(
             isIdeaTool(params.name) ||
               isPlanningTool(params.name) ||
               isFeedbackTool(params.name) ||
-              isMediaTool(params.name)
+              isMediaTool(params.name) ||
+              isExecutionTool(params.name)
               ? JSON.stringify({
                   code: 'validation',
-                  error:
-                    isFeedbackTool(params.name) || isMediaTool(params.name)
+                  error: isExecutionTool(params.name)
+                    ? 'Ungültige Ausführungs-Werkzeugargumente.'
+                    : isFeedbackTool(params.name) || isMediaTool(params.name)
                       ? 'Ungültige Feedback-Werkzeugargumente.'
                       : isPlanningTool(params.name)
                         ? 'Ungültige Planungs-Werkzeugargumente.'
