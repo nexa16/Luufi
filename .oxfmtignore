@@ -1,0 +1,5 @@
+# Published policy bytes are immutable and verified against their MCP payload.
+docs/guidelines/documentation.md
+docs/guidelines/planning.md
+docs/guidelines/implementation.md
+docs/guidelines/data-access.md
