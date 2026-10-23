@@ -17,7 +17,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      'npm run db:migrate:local && vinext dev --hostname 127.0.0.1 --port 4175',
+      'npm run db:migrate:local && node scripts/seed-planning-e2e.mjs && vinext dev --hostname 127.0.0.1 --port 4175',
     url: 'http://127.0.0.1:4175',
     reuseExistingServer: false,
     timeout: 120000,

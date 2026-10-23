@@ -1,6 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import ProjectsPage from '@/app/page';
 import RootLayout, { metadata, viewport } from '@/app/layout';
 import { PrimaryNavigation } from '@/components/primary-navigation';
 import { EnvironmentBanner } from '@/components/environment-banner';
@@ -13,17 +12,8 @@ vi.mock('cloudflare:workers', () => ({
   },
 }));
 describe('LUUFI-2 deutsche Plattform', () => {
-  it('zeigt ehrliche Projekte-Vorbereitung und eine eigenständige Ideenroute', () => {
-    render(<ProjectsPage />);
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Projekte' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Die neue Projektverwaltung wird vorbereitet/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'Projektideen öffnen' }),
-    ).toHaveAttribute('href', '/ideas');
+  it('bewahrt die deutsche Hauptnavigation und eigenständige Ideenroute', () => {
+    render(<PrimaryNavigation active="projects" />);
     const nav = screen.getByRole('navigation', { name: 'Hauptnavigation' });
     expect(within(nav).getByRole('link', { name: 'Projekte' })).toHaveAttribute(
       'aria-current',
@@ -31,7 +21,7 @@ describe('LUUFI-2 deutsche Plattform', () => {
     );
     expect(
       within(nav).getByRole('link', { name: 'Projektideen' }),
-    ).not.toHaveAttribute('aria-current');
+    ).toHaveAttribute('href', '/ideas');
     expect(screen.queryByText('Settings')).not.toBeInTheDocument();
   });
   it('kennzeichnet die Ideenroute eindeutig', () => {

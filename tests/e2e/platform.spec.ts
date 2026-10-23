@@ -14,7 +14,7 @@ test('LUUFI-2 F-1 deutsche Grundnavigation bleibt auf Desktop und Handy erreichb
     page.getByRole('link', { name: 'Projektideen', exact: true }),
   ).toHaveAttribute('href', '/ideas');
   await expect(
-    page.getByRole('heading', { name: 'Hier entsteht deine Projektübersicht' }),
+    page.getByRole('link', { name: 'Beispielprojekt', exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(

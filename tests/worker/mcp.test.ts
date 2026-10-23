@@ -211,6 +211,22 @@ describe('LUUFI-2 native Plattform-MCP', () => {
       'ideas_create',
       'ideas_update',
       'ideas_delete',
+      'projects_list',
+      'projects_get',
+      'projects_register',
+      'projects_update',
+      'milestones_list',
+      'milestones_get',
+      'milestones_create',
+      'milestones_update',
+      'milestones_move',
+      'orders_list',
+      'orders_get',
+      'orders_create',
+      'orders_update_draft',
+      'orders_place',
+      'orders_relation_set',
+      'orders_relation_remove',
     ]);
     for (const name of ['probe_read', 'probe_write', 'read_probe_attachment']) {
       expect(
@@ -367,7 +383,7 @@ describe('LUUFI-2 native Plattform-MCP', () => {
         )
       ).status,
     ).toBe(400);
-    for (const length of ['16385', 'wrong']) {
+    for (const length of ['262145', 'wrong']) {
       const input = call('probe_read');
       input.headers.set('content-length', length);
       expect((await dispatchMcp(input, bindings)).status).toBe(413);
@@ -378,7 +394,7 @@ describe('LUUFI-2 native Plattform-MCP', () => {
           new Request('https://luufi.test/mcp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: 'x'.repeat(16385),
+            body: 'x'.repeat(262145),
           }),
           bindings,
         )

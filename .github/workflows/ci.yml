@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +21,9 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      # The pinned hosted runner already supplies Chromium system libraries.
+      # Install the matching browser without unrelated apt upgrades/font packs.
+      - run: pnpm exec playwright install chromium
       - name: Local isolated browser identity
         shell: bash
         run: |
