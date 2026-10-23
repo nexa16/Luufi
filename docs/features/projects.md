@@ -17,7 +17,7 @@ Codex registriert Name, dauerhaftes Kürzel, Repository und Projektkonfiguration
 
 Das Kürzel besteht aus 2–20 Großbuchstaben/Ziffern, beginnt mit einem Buchstaben und bleibt eindeutig sowie unveränderlich. Integrationsbranch ist standardmäßig develop, Produktionsbranch main oder master. Dokumentationspfade sind relativ zum Repository. Repository-Adressen enthalten keine Zugangsdaten. Der private Sites-Einzelnutzerzugang schützt jeden Abruf.
 
-Projektstammdaten besitzen eine Revision; die getrennte Planungsrevision schützt Reihenfolgen und Cursor. Neue Projekte starten ihren Auftragszähler bei1. LUUFI reserviert die Bootstrapnummern1–9 und startet bei10. Es gibt keinen allgemeinen Importdienst.
+Projektstammdaten besitzen eine Revision; die getrennte Planungsrevision schützt Reihenfolgen und Cursor. Neue Projekte starten ihren Auftragszähler bei1. LUUFI reserviert die Bootstrapnummern1–12 und startet bei13. Es gibt keinen allgemeinen Importdienst.
 
 ## Sonder- und Fehlerfälle
 

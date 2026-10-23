@@ -134,7 +134,7 @@ export async function registerProject(
         config.productionBranch,
         JSON.stringify(config.documentationPaths),
         config.deploymentHints,
-        input.key === 'LUUFI' ? 10 : 1,
+        input.key === 'LUUFI' ? 13 : 1,
         ...(gate.params ?? []),
       ),
     ],

@@ -6,5 +6,6 @@
 - [Geordnete Milestones](milestones.md)
 - [Versionierte Auftragsentwürfe](orders.md)
 - [Lesbare Projektansichten](project-views.md)
+- [Feedback und Refinementquellen](feedback.md)
 
 Nur implementierte Features werden hier aufgeführt. Weitere Planung steht im freigegebenen Bootstrap-Auftragsregister.

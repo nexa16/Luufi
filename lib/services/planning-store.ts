@@ -6,6 +6,7 @@ export class PlanningError extends Error {
     public readonly code:
       | 'validation'
       | 'unauthorized'
+      | 'forbidden'
       | 'not_found'
       | 'conflict'
       | 'unavailable',
@@ -18,6 +19,7 @@ export class PlanningError extends Error {
     return {
       validation: 400,
       unauthorized: 401,
+      forbidden: 403,
       not_found: 404,
       conflict: 409,
       unavailable: 503,
