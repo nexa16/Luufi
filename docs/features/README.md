@@ -13,4 +13,6 @@
 - [Prüf- und Gitnachweise](order-evidence.md)
 - [Lesbare Freigaben, Fortschritt und Nachweise](order-evidence-views.md)
 
+- [Projektversionen, Builds und Releasebelege](project-versions.md)
+
 Nur implementierte Features werden hier aufgeführt. Weitere Planung steht im freigegebenen Bootstrap-Auftragsregister.

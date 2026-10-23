@@ -137,3 +137,15 @@ Die Gesamtfreigabe und ihre ausdrückliche Fortsetzung autorisieren diese konkre
 **Kriterien:** N-1 bereit/freigegeben/aktiv/unterbrochen/implementiert/erledigt klar trennen; N-2 ungültige Freigaben, alte Kandidaten und fehlgeschlagene Prüfungen nicht als aktuelle Erfolge ausgeben; N-3 alle Historien seitenweise, Lade-/Fehler-/Retry-/Routewechsel korrekt; N-4 sichere Referenzlinks, Commit/PR/CI und fehlender Buildgrund auf Desktop/Handy lesbar; N-5 bestehende Ideen/Planung/Feedbacknavigation erhalten und keine Browsermutation anbieten.
 
 **Teststrategie:** N-1–5 fokussierte UI-Interaktions-/Status-/Sicherheitsfälle und echter lokaler D1-Browserablauf mit synthetischem Auftrag DEMO-3 auf Desktop/Handy. **Voraussetzung:** LUUFI-13/14. **Ausschlüsse:** Freigabeknöpfe, Rundenansicht, Zeiterfassung und Versions-/Releaseoberfläche. **Dokumentation:** Nachweisansichten.
+
+## Welle 6: Versionen und Betriebsabschluss
+
+Die fortgesetzte Gesamtfreigabe autorisiert diese Fassungen v1 auf develop49c400a5. Lokale fokussierte Tests ohne Coverage und ein finales CI gemäß Implementierungsrichtlinie1.0.1. Produktion bleibt separat freizugeben.
+
+### LUUFI-16 v1 – Versionen, Änderungen, Builds und Releases
+
+**Ergebnis:** Codex speichert unveränderliche Versionen aus belegten erledigten Aufträgen und datierte Build-/Releasebeobachtungen.
+
+**Kriterien:** PV-1 Versionsinhalt und Umfang unveränderlich, Auswahl oder vollständiger Milestone ohne Abschneiden; PV-2 aktuelle W5-Integration oder explizite öffentliche Bootstrapprovenienz erforderlich; PV-3 Buildhistorie trennt öffentliche und Hosting-SHAs, neueste Beobachtung je Ziel bestimmt Verfügbarkeit; PV-4 letzte verfügbare Version bleibt trotz neuer unverfügbarer Version sichtbar; PV-5 Produktionsrelease nur nach ausdrücklicher Freigabe, passendem verfügbarem Produktionsbuild und tatsächlichen Branch-/Tag-/CI-Fakten; PV-6 Revisionen, Replay, Cursor, Projektgrenzen und Rollback atomar.
+
+**Teststrategie:** PV-1–6 echte D1-Snapshot-/Grenz-/Verfügbarkeits-/Releaseprüfungen, native API/MCP-Verträge und echte temporäre Git-/Tagfixtures. **Voraussetzung:** LUUFI-14. **Ausschlüsse:** automatische Veröffentlichung, Runtime-GitHub-Credentials und Semverzwang. **Dokumentation:** Projektversionen fachlich/technisch und Releasehelper.

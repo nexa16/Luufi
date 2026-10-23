@@ -49,7 +49,7 @@ export async function platformReadiness(
       'SELECT request_key, operation, payload_json, result_json FROM idea_mutation_requests LIMIT 0',
     ).all();
     await bindings.DB.prepare(
-      'SELECT id, project_key, planning_revision, next_order_number FROM planning_projects LIMIT 0',
+      'SELECT id, project_key, planning_revision, versions_revision, next_order_number FROM planning_projects LIMIT 0',
     ).all();
     await bindings.DB.prepare(
       'SELECT id, project_id, position, revision FROM planning_milestones LIMIT 0',
@@ -91,6 +91,11 @@ export async function platformReadiness(
       'order_progress',
       'order_lifecycle_events',
       'order_evidence',
+      'project_versions',
+      'version_orders',
+      'version_builds',
+      'version_releases',
+      'bootstrap_provenance',
     ])
       await bindings.DB.prepare(`SELECT 1 FROM ${table} LIMIT 0`).all();
     return { status: 'ok' as const, ...identity };
