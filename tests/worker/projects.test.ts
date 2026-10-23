@@ -30,7 +30,7 @@ describe('LUUFI-4 Projekte und atomarer Planungskern', () => {
     expect(await getProject('owner', p.id)).toEqual(p);
     expect(
       (await register('luufi', { ...input, key: 'LUUFI' })).nextOrderNumber,
-    ).toBe(13);
+    ).toBe(16);
     await expect(register('duplicate')).rejects.toMatchObject({
       code: 'conflict',
     });

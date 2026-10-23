@@ -1,4 +1,5 @@
 import { getD1 } from '@/lib/data/d1';
+import { invalidateApprovalItems, reconcileMilestones } from './execution-sql';
 import {
   orderStatuses,
   orderTypes,
@@ -389,11 +390,12 @@ export async function updateDraftOrder(
         ),
         writes: (gate) => [
           sql(
-            `UPDATE planning_orders SET type=?,spec_version=spec_version+1,revision=revision+1 WHERE id=? AND ${gate.sql}`,
+            `UPDATE planning_orders SET type=?,spec_version=spec_version+1,revision=revision+1,lifecycle_revision=lifecycle_revision+1 WHERE id=? AND ${gate.sql}`,
             content.type,
             id,
             ...gate.params!,
           ),
+          invalidateApprovalItems(gate, id, 'Spezifikationsfassung verändert'),
           sql(
             `INSERT INTO planning_order_versions(order_id,version,spec_json,created_at) SELECT id,spec_version,?,? FROM planning_orders WHERE id=? AND ${gate.sql}`,
             JSON.stringify(content.spec),
@@ -537,7 +539,7 @@ export async function placeOrder(
         ),
         writes: (gate) => [
           sql(
-            `UPDATE planning_orders SET milestone_id=?,revision=revision+1 WHERE id=? AND ${gate.sql}`,
+            `UPDATE planning_orders SET milestone_id=?,revision=revision+1,lifecycle_revision=lifecycle_revision+1 WHERE id=? AND ${gate.sql}`,
             milestoneId,
             id,
             ...gate.params!,
@@ -557,6 +559,7 @@ export async function placeOrder(
             projectId,
             ...gate.params!,
           ),
+          ...reconcileMilestones(gate, projectId),
         ],
         result: orderResult(projectId, id),
       });
@@ -635,7 +638,7 @@ async function mutateRelation(
         key: requestKey,
         guard: sql(
           `(${editable.sql}) AND EXISTS(SELECT 1 FROM planning_orders t WHERE t.id=? AND t.project_id=?
-          AND (t.milestone_id IS NULL OR EXISTS(SELECT 1 FROM planning_milestones tm WHERE tm.id=t.milestone_id AND tm.project_id=t.project_id AND tm.state='open')))
+          AND (t.status='done' OR t.milestone_id IS NULL OR EXISTS(SELECT 1 FROM planning_milestones tm WHERE tm.id=t.milestone_id AND tm.project_id=t.project_id AND tm.state='open')))
         AND ${remove ? '' : 'NOT '}EXISTS(SELECT 1 FROM planning_order_relations WHERE source_id=? AND target_id=? AND type=?) AND (${acyclic.sql})`,
           ...editable.params!,
           targetId,
@@ -646,6 +649,9 @@ async function mutateRelation(
           ...acyclic.params!,
         ),
         writes: (gate) => [
+          ...(type === 'depends_on'
+            ? [invalidateApprovalItems(gate, id, 'Voraussetzungen verändert')]
+            : []),
           remove
             ? sql(
                 `DELETE FROM planning_order_relations WHERE source_id=? AND target_id=? AND type=? AND ${gate.sql}`,
@@ -662,7 +668,7 @@ async function mutateRelation(
                 ...gate.params!,
               ),
           sql(
-            `UPDATE planning_orders SET revision=revision+1 WHERE id=? AND ${gate.sql}`,
+            `UPDATE planning_orders SET revision=revision+1,lifecycle_revision=lifecycle_revision+1 WHERE id=? AND ${gate.sql}`,
             id,
             ...gate.params!,
           ),
