@@ -15,8 +15,8 @@ export default function ProjectsPage() {
           Hier entsteht deine Projektübersicht
         </h2>
         <p className="mt-3 text-base leading-7 text-slate-400">
-          Die neue Projektverwaltung wird vorbereitet. Die eigenständigen
-          Projektideen werden im nächsten Auftrag ergänzt.
+          Die neue Projektverwaltung wird vorbereitet. Du kannst bereits eigene
+          Projektideen sammeln und bearbeiten.
         </p>
         <Link
           href="/ideas"

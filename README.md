@@ -2,7 +2,7 @@
 
 Private persönliche Planungszentrale. Der Quellcode ist öffentlich; Daten und Anhänge bleiben auf einer privaten Sites-Instanz.
 
-Der neue Aufbau bietet eine deutsche Grundlage mit geschütztem MCP-Zugang und versionierten Richtlinien. Projektideen werden als unabhängige Sammlung entwickelt. Weitere Projektplanung und Medien sind noch nicht implementiert.
+Der neue Aufbau bietet eine deutsche Grundlage mit geschütztem MCP-Zugang und versionierten Richtlinien. Eigenständige Projektideen lassen sich anlegen, lesen, bearbeiten und bestätigt löschen. Browser und MCP verwenden denselben Service mit Revisionen und sicheren Wiederholungen. Weitere Projektplanung und Medien sind noch nicht implementiert.
 
 - [Vorhandene Features](docs/features/README.md)
 - [Technische Grundlage](docs/technical/platform.md)

@@ -43,7 +43,10 @@ export async function platformReadiness(
     if (connection?.ready !== 1) return { status: 'unavailable' as const };
     // SELECT against the actual required table also verifies its expected columns.
     await bindings.DB.prepare(
-      'SELECT id, idea_text, detail, created_at FROM project_ideas LIMIT 0',
+      'SELECT id, idea_text, detail, created_at, revision FROM project_ideas LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT request_key, operation, payload_json, result_json FROM idea_mutation_requests LIMIT 0',
     ).all();
     return { status: 'ok' as const, ...identity };
   } catch {

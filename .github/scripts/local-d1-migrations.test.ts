@@ -209,6 +209,7 @@ describe('local D1 migration wrapper', () => {
       '0002_sour_plazm.sql',
       '0003_previous_moira_mactaggert.sql',
       '0004_mcp_probe.sql',
+      '0005_ideas_revisions.sql',
     ]);
   }, 30_000);
 });

@@ -1,3 +1,10 @@
+import {
+  callIdeaTool,
+  ideaTools,
+  isIdeaTool,
+  validIdeaArguments,
+} from './ideas';
+
 export interface ProbeState {
   revision: number;
   value: string;
@@ -88,6 +95,7 @@ const tools = [
     inputSchema: emptySchema,
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
+  ...ideaTools,
 ] as const;
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -137,6 +145,7 @@ function safeFailure(error: unknown) {
 }
 
 function validArguments(name: string, args: Record<string, unknown>): boolean {
+  if (isIdeaTool(name)) return validIdeaArguments(name, args);
   switch (name) {
     case 'get_context':
     case 'probe_read':
@@ -185,6 +194,7 @@ async function callTool(
 ) {
   if (!deps.ownerId.trim()) return toolError('Zugriff nicht erlaubt.');
   try {
+    if (isIdeaTool(name)) return await callIdeaTool(name, args, deps.ownerId);
     switch (name) {
       case 'get_context':
         return toolResult(await deps.getContext());
@@ -242,7 +252,8 @@ export async function handleMcpMessage(
   const availableTools = tools.filter(
     (tool) =>
       deps.environment === 'preview' ||
-      ['get_guidelines', 'get_context'].includes(tool.name),
+      ['get_guidelines', 'get_context'].includes(tool.name) ||
+      isIdeaTool(tool.name),
   );
   switch (message.method) {
     case 'server/discover':
@@ -275,7 +286,17 @@ export async function handleMcpMessage(
       // Arguments may be omitted for tools with an empty input schema.
       const args = record(params.arguments) ? params.arguments : {};
       if (!validArguments(params.name, args)) {
-        return success(id, toolError('Ungültige Werkzeugargumente.'));
+        return success(
+          id,
+          toolError(
+            isIdeaTool(params.name)
+              ? JSON.stringify({
+                  code: 'validation',
+                  error: 'Ungültige Projektideen-Werkzeugargumente.',
+                })
+              : 'Ungültige Werkzeugargumente.',
+          ),
+        );
       }
       return success(id, await callTool(params.name, args, deps));
     }

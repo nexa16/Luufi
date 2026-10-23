@@ -206,6 +206,11 @@ describe('LUUFI-2 native Plattform-MCP', () => {
     expect(listed.result.tools.map((tool) => tool.name)).toEqual([
       'get_context',
       'get_guidelines',
+      'ideas_list',
+      'ideas_get',
+      'ideas_create',
+      'ideas_update',
+      'ideas_delete',
     ]);
     for (const name of ['probe_read', 'probe_write', 'read_probe_attachment']) {
       expect(

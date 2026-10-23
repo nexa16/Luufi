@@ -45,12 +45,10 @@ describe('LUUFI-2 Plattformidentität und Bereitschaft', () => {
     ).toBe('main');
   });
   it('prüft die Verbindung und echte Ideentabelle ohne Inhaltslesen oder Token', async () => {
-    const prepare = vi
-      .fn()
-      .mockReturnValue({
-        first: vi.fn().mockResolvedValue({ ready: 1 }),
-        all: vi.fn().mockResolvedValue({ results: [] }),
-      });
+    const prepare = vi.fn().mockReturnValue({
+      first: vi.fn().mockResolvedValue({ ready: 1 }),
+      all: vi.fn().mockResolvedValue({ results: [] }),
+    });
     const DB = { prepare } as unknown as D1Database;
     expect(await platformReadiness({ ...identity, DB })).toMatchObject({
       status: 'ok',
@@ -58,10 +56,11 @@ describe('LUUFI-2 Plattformidentität und Bereitschaft', () => {
     });
     expect(prepare.mock.calls.map(([sql]) => sql)).toEqual([
       'SELECT 1 AS ready',
-      'SELECT id, idea_text, detail, created_at FROM project_ideas LIMIT 0',
+      'SELECT id, idea_text, detail, created_at, revision FROM project_ideas LIMIT 0',
+      'SELECT request_key, operation, payload_json, result_json FROM idea_mutation_requests LIMIT 0',
     ]);
     expect(await platformReadiness({ DB })).toEqual({ status: 'unavailable' });
-    expect(prepare).toHaveBeenCalledTimes(2);
+    expect(prepare).toHaveBeenCalledTimes(3);
   });
   it.each([null, { ready: 0 }])(
     'meldet fehlende Verbindung %j',
