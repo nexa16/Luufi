@@ -109,3 +109,31 @@ Die Gesamtfreigabe autorisiert diese konkreten Fassungen v1 auf integriertem dev
 **Kriterien:** U-1 deutsche Projektliste/Detail/Originale/datierte Ergänzungen und paginierte Refinements/Quellen; U-2 Text und Plätze vor seriellen Dateiübertragungen, tatsächlicher Bytefortschritt und Serverprüfung; U-3 unklare Antworten sicher wiederholen, Slot nach Reload mit passender Datei fortsetzen ohne neue Texteingabe; U-4 geschützte Vorschau/Downloadfallback, fertige Dateien bleiben bei weiteren Fehlern erhalten; U-5 Projektwechsel und neue Eingaben können keine fremden oder laufenden Uploadantworten übernehmen.
 
 **Teststrategie:** U-1–5 fokussierte UI-Interaktions-/Netzfehler-/Replay-/Kontextwechseltests; repräsentativer Desktop-/Handy-Browserablauf gegen synthetische lokale D1/R2 mit absichtlich fehlgeschlagenem Upload, Reload, Wiederholung und Ergänzung. Betroffene Regressionen: Planungsnavigation, Ideen, Migrationserhalt und authentifizierte Identität. **Voraussetzung:** LUUFI-10/11. **Ausschlüsse:** Browserrefinement, Hintergrundupload nach Verlassen und Lifecycleänderungen. **Dokumentation:** Feedbackansichten.
+
+## Welle 5: Freigaben, Bearbeitung und Nachweise
+
+Die Gesamtfreigabe und ihre ausdrückliche Fortsetzung autorisieren diese konkreten Fassungen v1 auf develop2ba7039. Dokumentation/Planung1.0.0 und Implementierung/Datenzugriff1.0.1 gelten. Keine Produktionsfreigabe, kein automatischer Agentstart und keine Zeitabrechnung.
+
+### LUUFI-13 v1 – Freigabe und exklusive Auftragsbearbeitung
+
+**Ergebnis:** Codex setzt vollständige Spezifikationen bereit, speichert konkrete Nutzerfreigaben, beginnt genau eine Bearbeitung und dokumentiert Unterbrechung, Fortsetzung, Übernahme, Hindernisse sowie ausdrückliches Stoppen/Archivieren.
+
+**Kriterien:** L-1 bereit ist keine Freigabe; genaue Fassungs-/Titel-/Voraussetzungs-/Repositorysnapshots binden Nutzerbestätigung; L-2 Auswahl und vollständiger bereiter Milestone ohne verborgenes Abschneiden, spätere Mitglieder nicht eingeschlossen; L-3 konkurrierende Starts/CAS/Replay erlauben einen Claim, alte Generationen nach Übernahme sind unwirksam; L-4 laufende Spezifikationen bleiben gesperrt, Stop/Replan entwertet Freigaben, neue Freigaben ersetzen ältere Bindungen nur für betroffene Aufträge; L-5 Voraussetzungen sind erledigt oder als vorheriger geprüfter gepushter Commit desselben Branchs belegt; L-6 nicht leere erfüllte Milestones schließen atomar, Entwürfe verhindern Abschluss, leere bleiben ohne ausdrückliche Bestätigung offen.
+
+**Teststrategie:** L-1–6 echte D1-/Race-/Rollback-/Snapshot-/Generation-/Milestoneprüfungen und native Browser-/MCP-Vertragsintegration. Bestehende Planungsänderungen prüfen dauerhafte Invalidierung und schützen aktive Repositorykontexte. **Voraussetzung:** LUUFI-4–7. **Ausschlüsse:** Agentstart, Blockerstatus, Browsermutation und erneutes Öffnen erledigter Spezifikationen. **Dokumentation:** Auftragsbearbeitung fachlich/technisch.
+
+### LUUFI-14 v1 – Tatsächliche Gitprüfung und Abschlussnachweise
+
+**Ergebnis:** Ein schreibgeschützter lokaler Helper prüft Git-/Remote-/PR-/CI-Fakten. Luufi speichert diese Codex-Beobachtungen und unterscheidet geprüfte gepushte Implementierung von erhaltenem normalen Integrationsmerge.
+
+**Kriterien:** E-1 Kriterien-/Dokumentationsbelege binden Auftrag/Fassung/Claim/Generation/Commit; E-2 genau ein aktueller finaler Auftragscommit, Ersetzung vor Integration nachvollziehbar; E-3 aktueller Remotehead, Ancestry und genau eine Commitzuordnung tatsächlich prüfen, kein Checkout/PR-Code/Fetchausführung; E-4 done nur nach normalem PR-Merge zum konfigurierten Integrationsbranch, erhaltenem Auftragscommit und erfolgreicher passender CI; E-5 Fehler bleiben Historie, fehlende Bereitstellung benötigt Grund und verhindert Integration nicht; E-6 owner-authentifizierte Codex-Provenienz ehrlich benennen, kein neuer Runtime-GitHub-Zugang.
+
+**Teststrategie:** E-1/2/4/5 D1-State-/Claim-/Replay-/Rollbackprüfungen; E-3 echte temporäre Git-Repositories mit normalem Merge/Squash, abweichendem Remotehead, doppelter Auftragskennung und strukturierten read-only Plattformfixtures; E-6 Adapter-/Validierungstests. Zusätzlicher tatsächlicher GitHub-CLI-Smoke mit integriertem öffentlichen W4-PR, ohne neuen Live-Datensatz. **Voraussetzung:** LUUFI-13 und gemeinsame Schema-/Claimverträge. **Ausschlüsse:** GitHub-Synchronisation, Serverauth und automatische Produktion. **Dokumentation:** Nachweise fachlich/technisch und Helperbetrieb.
+
+### LUUFI-15 v1 – Lesbare Freigaben, Fortschritt und Nachweise
+
+**Ergebnis:** Das deutsche Auftragsdetail zeigt genaue Freigaben, aktive/unterbrochene Bearbeitung, historische Notizen und Prüf-/Gitnachweise mit ehrlichen fehlenden oder ersetzten Ergebnissen.
+
+**Kriterien:** N-1 bereit/freigegeben/aktiv/unterbrochen/implementiert/erledigt klar trennen; N-2 ungültige Freigaben, alte Kandidaten und fehlgeschlagene Prüfungen nicht als aktuelle Erfolge ausgeben; N-3 alle Historien seitenweise, Lade-/Fehler-/Retry-/Routewechsel korrekt; N-4 sichere Referenzlinks, Commit/PR/CI und fehlender Buildgrund auf Desktop/Handy lesbar; N-5 bestehende Ideen/Planung/Feedbacknavigation erhalten und keine Browsermutation anbieten.
+
+**Teststrategie:** N-1–5 fokussierte UI-Interaktions-/Status-/Sicherheitsfälle und echter lokaler D1-Browserablauf mit synthetischem Auftrag DEMO-3 auf Desktop/Handy. **Voraussetzung:** LUUFI-13/14. **Ausschlüsse:** Freigabeknöpfe, Rundenansicht, Zeiterfassung und Versions-/Releaseoberfläche. **Dokumentation:** Nachweisansichten.

@@ -81,6 +81,18 @@ export async function platformReadiness(
     await bindings.DB.prepare(
       'SELECT refinement_id, feedback_id, order_id FROM feedback_order_sources LIMIT 0',
     ).all();
+    await bindings.DB.prepare(
+      'SELECT id,lifecycle_revision,current_implementation_id,integration_id FROM planning_orders LIMIT 0',
+    ).all();
+    for (const table of [
+      'order_approvals',
+      'order_approval_items',
+      'order_executions',
+      'order_progress',
+      'order_lifecycle_events',
+      'order_evidence',
+    ])
+      await bindings.DB.prepare(`SELECT 1 FROM ${table} LIMIT 0`).all();
     return { status: 'ok' as const, ...identity };
   } catch {
     return { status: 'unavailable' as const };
