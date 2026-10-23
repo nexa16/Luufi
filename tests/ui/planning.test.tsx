@@ -4,8 +4,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ProjectsPage from '@/app/page';
 import ProjectPage from '@/app/projects/[projectId]/page';
 import MilestonesPage from '@/app/projects/[projectId]/milestones/page';
-import { MilestoneCollection, ProjectOverview } from '@/app/planning';
-import type { Milestone, Project } from '@/lib/domain/planning';
+import OrdersPage from '@/app/projects/[projectId]/orders/page';
+import OrderPage from '@/app/projects/[projectId]/orders/[orderId]/page';
+import {
+  MilestoneCollection,
+  OrderCollection,
+  OrderDetail,
+  ProjectOverview,
+} from '@/app/planning';
+import type {
+  Milestone,
+  Order,
+  OrderSpec,
+  Project,
+} from '@/lib/domain/planning';
 
 const fetchMock = vi.fn<typeof fetch>();
 const requestUrl = (input: Parameters<typeof fetch>[0]) =>
@@ -46,9 +58,467 @@ const json = (data: unknown, status = 200) =>
 const page = <T,>(items: T[], nextCursor: string | null = null) =>
   json({ items, nextCursor });
 
+const spec = (overrides: Partial<OrderSpec> = {}): OrderSpec => ({
+  title: 'Die Projektansicht lesen',
+  goal: 'Den aktuellen Stand verstehen.',
+  origin: 'Eine ursprüngliche Idee',
+  problem: 'Es fehlt eine Übersicht.',
+  scope: 'Lesende Ansichten',
+  exclusions: 'Keine Bearbeitung im Browser',
+  flows: 'Projekt öffnen und Auftrag lesen.',
+  criteria: [{ id: 'AC1', text: 'Der aktuelle Stand ist lesbar.' }],
+  testStrategy: 'Oberfläche und Datenabruf prüfen.',
+  prerequisites: 'Ein registriertes Projekt',
+  documentation: 'Featurebeschreibung aktualisieren.',
+  context: { repositoryCommit: 'a'.repeat(40), documentationPolicy: '1.0.0' },
+  sources: ['Eine erhaltene Originalquelle'],
+  ...overrides,
+});
+const order = (overrides: Partial<Order> = {}): Order => ({
+  id: 'order-1',
+  projectId: 'project-1',
+  number: 1,
+  displayId: 'TEST-1',
+  type: 'feature',
+  status: 'draft',
+  specVersion: 2,
+  revision: 1,
+  milestoneId: 'milestone-1',
+  position: 0,
+  spec: spec(),
+  history: [
+    {
+      version: 1,
+      spec: spec({ title: 'Eine frühere Fassung', goal: 'Das frühere Ziel' }),
+      createdAt: '2026-10-22T10:00:00.000Z',
+    },
+    { version: 2, spec: spec(), createdAt: '2026-10-23T10:00:00.000Z' },
+  ],
+  relations: [],
+  ...overrides,
+});
+
+function orderListApi(items: Order[], milestones: Milestone[] = [milestone()]) {
+  fetchMock.mockImplementation(async (input) =>
+    requestUrl(input).includes('/milestones') ? page(milestones) : page(items),
+  );
+}
+
 beforeEach(() => {
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
+});
+
+describe('LUUFI-9 Aufträge und Spezifikationen lesen', () => {
+  it('zeigt IDs, Typ, Zustand, Fassung und Milestone in der Auftragsliste', async () => {
+    orderListApi([
+      order(),
+      order({
+        id: 'o2',
+        displayId: 'TEST-2',
+        type: 'defect',
+        milestoneId: null,
+        spec: spec({ title: 'Ein kleiner Fehler' }),
+      }),
+    ]);
+    render(
+      await OrdersPage({
+        params: Promise.resolve({ projectId: 'project-1' }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+    await screen.findByRole('link', { name: 'Die Projektansicht lesen' });
+    expect(screen.getByRole('article', { name: /TEST-1/ })).toHaveTextContent(
+      'Feature',
+    );
+    expect(screen.getByRole('article', { name: /TEST-1/ })).toHaveTextContent(
+      'Entwurf',
+    );
+    expect(screen.getByRole('article', { name: /TEST-1/ })).toHaveTextContent(
+      'Fassung 2 · Erster Schritt',
+    );
+    expect(screen.getByRole('article', { name: /TEST-2/ })).toHaveTextContent(
+      'Fehlerbehebung',
+    );
+    expect(screen.getByRole('article', { name: /TEST-2/ })).toHaveTextContent(
+      'Unverplant',
+    );
+    expect(
+      screen.getByRole('link', { name: 'Die Projektansicht lesen' }),
+    ).toHaveAttribute('href', '/projects/project-1/orders/order-1');
+    expect(screen.getByRole('link', { name: 'Aufträge' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(
+      fetchMock.mock.calls.every(
+        ([, options]) => !options?.method || options.method === 'GET',
+      ),
+    ).toBe(true);
+  });
+
+  it('kombiniert Milestone-, Zustands- und Typfilter und speichert die Auswahl in der URL', async () => {
+    const user = userEvent.setup();
+    orderListApi([]);
+    render(<OrderCollection projectId="project-1" />);
+    await screen.findByText('Keine Aufträge für diese Auswahl vorhanden.');
+    await user.selectOptions(screen.getByLabelText('Milestone'), 'unplanned');
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url]) =>
+            url ===
+            '/api/projects/project-1/orders?milestoneId=unplanned&limit=20',
+        ),
+      ).toBe(true),
+    );
+    await user.selectOptions(screen.getByLabelText('Zustand'), 'draft');
+    await user.selectOptions(screen.getByLabelText('Typ'), 'defect');
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url]) =>
+            url ===
+            '/api/projects/project-1/orders?milestoneId=unplanned&status=draft&type=defect&limit=20',
+        ),
+      ).toBe(true),
+    );
+    expect(window.location.search).toBe(
+      '?milestoneId=unplanned&status=draft&type=defect',
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'Filter zurücksetzen' }),
+    );
+    await waitFor(() => expect(window.location.search).toBe(''));
+    expect(screen.getByLabelText('Milestone')).toHaveValue('');
+  });
+
+  it('übernimmt Filter aus verlinkten URLs und ergänzt auch spätere Milestone-Optionen', async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes('cursor=more'))
+        return page([
+          milestone({ id: 'm2', title: 'Späterer Milestone', state: 'closed' }),
+        ]);
+      if (url.includes('/milestones')) return page([milestone()], 'more');
+      return page([order({ milestoneId: 'm2' })]);
+    });
+    render(
+      await OrdersPage({
+        params: Promise.resolve({ projectId: 'project-1' }),
+        searchParams: Promise.resolve({
+          milestoneId: ['m2'],
+          type: 'feature',
+          status: 'draft',
+        }),
+      }),
+    );
+    await screen.findByRole('option', {
+      name: 'Späterer Milestone · geschlossen',
+    });
+    expect(screen.getByLabelText('Milestone')).toHaveValue('m2');
+    expect(screen.getByLabelText('Zustand')).toHaveValue('draft');
+    expect(screen.getByLabelText('Typ')).toHaveValue('feature');
+    expect(
+      fetchMock.mock.calls.some(
+        ([url]) =>
+          url ===
+          '/api/projects/project-1/orders?milestoneId=m2&status=draft&type=feature&limit=20',
+      ),
+    ).toBe(true);
+    expect(await screen.findByRole('article')).toHaveTextContent(
+      'Späterer Milestone',
+    );
+  });
+
+  it('verbirgt alte Ergebnisse sofort beim Filterwechsel und ignoriert eine verspätete Antwort', async () => {
+    let finish!: (response: Response) => void;
+    fetchMock.mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes('/milestones')) return page([]);
+      if (url.includes('type=feature'))
+        return new Promise((resolve) => {
+          finish = resolve;
+        });
+      if (url.includes('type=defect'))
+        return page([
+          order({
+            id: 'o2',
+            type: 'defect',
+            spec: spec({ title: 'Ein kleiner Fehler' }),
+          }),
+        ]);
+      return page([order()], 'old-cursor');
+    });
+    const user = userEvent.setup();
+    render(<OrderCollection projectId="project-1" />);
+    await screen.findByRole('link', { name: 'Die Projektansicht lesen' });
+    await user.selectOptions(screen.getByLabelText('Typ'), 'feature');
+    await waitFor(() => expect(finish).toBeTypeOf('function'));
+    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Typ'), 'defect');
+    await screen.findByRole('link', { name: 'Ein kleiner Fehler' });
+    finish(page([order()]));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('link', { name: 'Die Projektansicht lesen' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Weitere laden' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('behält die lesbaren Aufträge bei ausgefallener Milestone-Auswahl', async () => {
+    fetchMock.mockImplementation(async (input) =>
+      requestUrl(input).includes('/milestones')
+        ? json({ error: 'Milestones fehlen vorübergehend.' }, 503)
+        : page([order()]),
+    );
+    render(
+      <OrderCollection
+        projectId="project-1"
+        initialSelection={{
+          milestoneId: 'milestone-1',
+          status: 'invalid',
+          type: 'invalid',
+        }}
+      />,
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Milestones fehlen vorübergehend.',
+    );
+    expect(await screen.findByRole('article')).toHaveTextContent(
+      'Milestone zugeordnet',
+    );
+    expect(screen.getByLabelText('Milestone')).toHaveValue('milestone-1');
+    expect(screen.getByLabelText('Zustand')).toHaveValue('');
+    expect(screen.getByLabelText('Typ')).toHaveValue('');
+  });
+
+  it('lädt weitere gefilterte Aufträge am selben Filter und kann die Auswahl aktualisieren', async () => {
+    let nextPage = false;
+    fetchMock.mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes('/milestones')) return page([]);
+      if (url.includes('cursor=more')) {
+        nextPage = true;
+        return page([
+          order({ id: 'o2', spec: spec({ title: 'Weiterer Auftrag' }) }),
+        ]);
+      }
+      return page([order()], nextPage ? null : 'more');
+    });
+    const user = userEvent.setup();
+    render(
+      <OrderCollection
+        projectId="project-1"
+        initialSelection={{ type: 'feature' }}
+      />,
+    );
+    await screen.findByRole('article');
+    await user.click(screen.getByRole('button', { name: 'Weitere laden' }));
+    await screen.findByRole('link', { name: 'Weiterer Auftrag' });
+    expect(
+      fetchMock.mock.calls.some(
+        ([url]) =>
+          url ===
+          '/api/projects/project-1/orders?type=feature&limit=20&cursor=more',
+      ),
+    ).toBe(true);
+    await user.click(screen.getByRole('button', { name: 'Aktualisieren' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('link', { name: 'Weiterer Auftrag' }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it('macht die vollständige Spezifikation und frühere unveränderte Fassungen lesbar', async () => {
+    fetchMock.mockResolvedValueOnce(json(order()));
+    const user = userEvent.setup();
+    render(
+      await OrderPage({
+        params: Promise.resolve({ projectId: 'project-1', orderId: 'order-1' }),
+      }),
+    );
+    await screen.findByRole('heading', { level: 1, name: 'TEST-1' });
+    const current = screen.getByRole('region', {
+      name: 'Aktueller Auftragsstand',
+    });
+    expect(current).toHaveTextContent('Entwurf');
+    expect(current).toHaveTextContent('Feature');
+    const specification = screen.getByRole('region', { name: 'Spezifikation' });
+    for (const expected of [
+      'Den aktuellen Stand verstehen.',
+      'Eine ursprüngliche Idee',
+      'Es fehlt eine Übersicht.',
+      'Lesende Ansichten',
+      'Keine Bearbeitung im Browser',
+      'Projekt öffnen und Auftrag lesen.',
+      'Oberfläche und Datenabruf prüfen.',
+      'Ein registriertes Projekt',
+      'Featurebeschreibung aktualisieren.',
+      'AC1',
+      'Der aktuelle Stand ist lesbar.',
+      'Eine erhaltene Originalquelle',
+      'a'.repeat(40),
+      '1.0.0',
+    ])
+      expect(specification).toHaveTextContent(expected);
+    expect(
+      within(specification).getByRole('heading', {
+        name: 'Spezifikation · Fassung 2',
+      }),
+    ).toBeInTheDocument();
+    await user.selectOptions(
+      screen.getByLabelText('Spezifikationsfassung'),
+      '1',
+    );
+    expect(
+      within(specification).getByText('Das frühere Ziel'),
+    ).toBeInTheDocument();
+    expect(
+      within(specification).getByText('Eine frühere Fassung'),
+    ).toBeInTheDocument();
+    expect(current).toHaveTextContent('Die Projektansicht lesen');
+    expect(
+      screen.getByRole('link', { name: 'Aufträge im selben Milestone' }),
+    ).toHaveAttribute(
+      'href',
+      '/projects/project-1/orders?milestoneId=milestone-1',
+    );
+    expect(
+      screen.queryByRole('button', { name: /freigeben|starten|bearbeiten/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('zeigt unvollständige Entwürfe und fehlende optionale Inhalte ohne erfundene Regeln', async () => {
+    const draft = spec({
+      title: '',
+      problem: '',
+      criteria: [],
+      sources: [],
+      context: { repositoryCommit: '', documentationPolicy: '' },
+    });
+    fetchMock.mockResolvedValueOnce(
+      json(
+        order({
+          milestoneId: null,
+          specVersion: 1,
+          spec: draft,
+          history: [{ version: 1, spec: draft, createdAt: '' }],
+        }),
+      ),
+    );
+    render(<OrderDetail projectId="project-1" orderId="order-1" />);
+    await screen.findByRole('heading', { level: 1, name: 'TEST-1' });
+    expect(
+      screen.getByRole('region', { name: 'Aktueller Auftragsstand' }),
+    ).toHaveTextContent('Auftrag ohne Titel');
+    expect(
+      screen.getByRole('region', { name: 'Aktueller Auftragsstand' }),
+    ).toHaveTextContent('Unverplant');
+    expect(
+      screen.getByText('Noch keine Kriterien hinterlegt.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Keine Quellen hinterlegt.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Keine Beziehungen hinterlegt.'),
+    ).toBeInTheDocument();
+    for (const field of [
+      'Titel',
+      'Nutzerproblem',
+      'Repository-Commit',
+      'Dokumentationsrichtlinie',
+    ])
+      expect(screen.getByText(field).nextElementSibling).toHaveTextContent(
+        'Nicht hinterlegt.',
+      );
+  });
+
+  it('zeigt gerichtete Beziehungen mit lesbaren Zielkennungen und Verweisen', async () => {
+    fetchMock.mockImplementation(async (input) =>
+      requestUrl(input).endsWith('/order-1')
+        ? json(
+            order({
+              relations: [
+                { type: 'depends_on', targetId: 'order-2' },
+                { type: 'related', targetId: 'order-3' },
+                { type: 'originated_from', targetId: 'order-4' },
+                { type: 'replaces', targetId: 'order-5' },
+              ],
+            }),
+          )
+        : json(
+            order({
+              id: 'order-2',
+              displayId: 'TEST-2',
+              spec: spec({ title: 'Vorarbeit' }),
+            }),
+          ),
+    );
+    render(<OrderDetail projectId="project-1" orderId="order-1" />);
+    const relations = await screen.findByRole('region', {
+      name: 'Ausgehende Beziehungen',
+    });
+    await within(relations).findAllByRole('link', {
+      name: 'TEST-2 · Vorarbeit',
+    });
+    expect(relations).toHaveTextContent('von TEST-1');
+    for (const type of [
+      'Abhängig von',
+      'Verwandt mit',
+      'Entstanden aus',
+      'Ersetzt',
+    ])
+      expect(within(relations).getByText(type)).toBeInTheDocument();
+    expect(within(relations).getAllByRole('link')[0]).toHaveAttribute(
+      'href',
+      '/projects/project-1/orders/order-2',
+    );
+  });
+
+  it('stellt eine fehlgeschlagene Beziehungsauflösung separat wieder her', async () => {
+    let available = false;
+    fetchMock.mockImplementation(async (input) =>
+      requestUrl(input).endsWith('/order-1')
+        ? json(order({ relations: [{ type: 'related', targetId: 'order-2' }] }))
+        : available
+          ? json(
+              order({
+                displayId: 'TEST-2',
+                spec: spec({ title: 'Wieder lesbar' }),
+              }),
+            )
+          : json({ error: 'Dieser Auftrag wurde nicht gefunden.' }, 404),
+    );
+    const user = userEvent.setup();
+    render(<OrderDetail projectId="project-1" orderId="order-1" />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'nicht gefunden',
+    );
+    expect(
+      screen.getByRole('region', { name: 'Spezifikation' }),
+    ).toBeInTheDocument();
+    available = true;
+    await user.click(screen.getByRole('button', { name: 'Erneut versuchen' }));
+    await screen.findByRole('link', { name: 'TEST-2 · Wieder lesbar' });
+  });
+
+  it('stellt einen fehlenden Auftrag nach Wiederholung wieder her', async () => {
+    fetchMock.mockResolvedValueOnce(
+      json({ error: 'Dieser Auftrag wurde nicht gefunden.' }, 404),
+    );
+    const user = userEvent.setup();
+    render(<OrderDetail projectId="project-1" orderId="order-1" />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'nicht gefunden',
+    );
+    fetchMock.mockResolvedValueOnce(json(order()));
+    await user.click(screen.getByRole('button', { name: 'Erneut versuchen' }));
+    await screen.findByRole('heading', { level: 1, name: 'TEST-1' });
+  });
 });
 
 describe('LUUFI-8 Projekte und Milestones lesen', () => {

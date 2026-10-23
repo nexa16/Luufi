@@ -4,7 +4,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { PrimaryNavigation } from '@/components/primary-navigation';
-import type { Milestone, Page, Project } from '@/lib/domain/planning';
+import { orderStatuses, orderTypes } from '@/lib/domain/planning';
+import type {
+  Milestone,
+  Order,
+  OrderSpec,
+  OrderStatus,
+  OrderType,
+  Page,
+  Project,
+  RelationType,
+} from '@/lib/domain/planning';
 
 const button =
   'inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-300 disabled:opacity-50';
@@ -123,6 +133,7 @@ function useCollection<T extends { id: string }>(url: string) {
         ...previous,
         url,
         items: previous.url === url ? previous.items : [],
+        nextCursor: previous.url === url ? previous.nextCursor : null,
         loading: true,
         error: undefined,
         failedCursor: cursor,
@@ -246,7 +257,7 @@ function ProjectNavigation({
   active,
 }: {
   projectId: string;
-  active: 'overview' | 'milestones';
+  active: 'overview' | 'milestones' | 'orders';
 }) {
   const root = `/projects/${encodeURIComponent(projectId)}`;
   return (
@@ -258,6 +269,7 @@ function ProjectNavigation({
         [
           ['overview', 'Übersicht', root],
           ['milestones', 'Milestones', `${root}/milestones`],
+          ['orders', 'Aufträge', `${root}/orders`],
         ] as const
       ).map(([key, text, href]) => (
         <Link
@@ -512,11 +524,482 @@ export function MilestoneCollection({ projectId }: { projectId: string }) {
                   {milestone.description}
                 </p>
               )}
+              <Link
+                className={`${button} mt-4`}
+                href={`/projects/${encodeURIComponent(projectId)}/orders?milestoneId=${encodeURIComponent(milestone.id)}`}
+              >
+                Aufträge ansehen
+              </Link>
             </article>
           </li>
         ))}
       </ol>
       <CollectionFooter {...milestones} />
+    </Frame>
+  );
+}
+
+const statusNames: Record<OrderStatus, string> = {
+  draft: 'Entwurf',
+  ready: 'Bereit',
+  implementing: 'In Implementierung',
+  implemented: 'Implementiert',
+  done: 'Erledigt',
+  archived: 'Archiviert',
+};
+const typeNames: Record<OrderType, string> = {
+  feature: 'Feature',
+  improvement: 'Verbesserung',
+  defect: 'Fehlerbehebung',
+  technical: 'Technische Arbeit',
+};
+const relationNames: Record<RelationType, string> = {
+  depends_on: 'Abhängig von',
+  related: 'Verwandt mit',
+  originated_from: 'Entstanden aus',
+  replaces: 'Ersetzt',
+};
+
+export type OrderSelection = {
+  milestoneId?: string;
+  status?: string;
+  type?: string;
+};
+
+async function milestoneChoices(
+  url: string,
+  signal: AbortSignal,
+): Promise<Milestone[]> {
+  const items: Milestone[] = [];
+  let cursor: string | null = null;
+  do {
+    const page: Page<Milestone> = await readJson(
+      `${url}?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`,
+      signal,
+    );
+    items.push(...page.items);
+    cursor = page.nextCursor;
+  } while (cursor);
+  return items;
+}
+
+function filterQuery(selection: OrderSelection) {
+  const query = new URLSearchParams();
+  if (selection.milestoneId) query.set('milestoneId', selection.milestoneId);
+  if (selection.status) query.set('status', selection.status);
+  if (selection.type) query.set('type', selection.type);
+  return query.toString();
+}
+
+export function OrderCollection({
+  projectId,
+  initialSelection = {},
+}: {
+  projectId: string;
+  initialSelection?: OrderSelection;
+}) {
+  const [selection, setSelection] = useState<OrderSelection>({
+    milestoneId: initialSelection.milestoneId ?? '',
+    status: orderStatuses.includes(initialSelection.status as OrderStatus)
+      ? initialSelection.status
+      : '',
+    type: orderTypes.includes(initialSelection.type as OrderType)
+      ? initialSelection.type
+      : '',
+  });
+  const root = `/api/projects/${encodeURIComponent(projectId)}`;
+  const query = filterQuery(selection);
+  const orders = useCollection<Order>(
+    `${root}/orders${query ? `?${query}` : ''}`,
+  );
+  const milestones = useRead<Milestone[]>(
+    `${root}/milestones`,
+    milestoneChoices,
+  );
+  function change(next: OrderSelection) {
+    setSelection(next);
+    const updated = filterQuery(next);
+    window.history.replaceState(
+      null,
+      '',
+      `/projects/${encodeURIComponent(projectId)}/orders${updated ? `?${updated}` : ''}`,
+    );
+  }
+  return (
+    <Frame title="Aufträge">
+      <ProjectNavigation projectId={projectId} active="orders" />
+      <fieldset className={`${panel} mb-5`}>
+        <legend className="px-2 text-sm font-bold text-lime-200">
+          Auftragsfilter
+        </legend>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="block text-sm font-semibold text-slate-300">
+            Milestone
+            <select
+              className="mt-2 min-h-11 w-full rounded-xl border border-white/20 bg-[#101722] px-3 text-white"
+              value={selection.milestoneId}
+              onChange={(event) =>
+                change({ ...selection, milestoneId: event.target.value })
+              }
+            >
+              <option value="">Alle Milestones</option>
+              <option value="unplanned">Unverplant</option>
+              {selection.milestoneId &&
+                selection.milestoneId !== 'unplanned' &&
+                !milestones.data?.some(
+                  (item) => item.id === selection.milestoneId,
+                ) && (
+                  <option value={selection.milestoneId}>
+                    Gewählter Milestone
+                  </option>
+                )}
+              {milestones.data?.map((milestone) => (
+                <option key={milestone.id} value={milestone.id}>
+                  {milestone.title}
+                  {milestone.state === 'closed' ? ' · geschlossen' : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-slate-300">
+            Zustand
+            <select
+              className="mt-2 min-h-11 w-full rounded-xl border border-white/20 bg-[#101722] px-3 text-white"
+              value={selection.status}
+              onChange={(event) =>
+                change({ ...selection, status: event.target.value })
+              }
+            >
+              <option value="">Alle Zustände</option>
+              {orderStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {statusNames[status]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-slate-300">
+            Typ
+            <select
+              className="mt-2 min-h-11 w-full rounded-xl border border-white/20 bg-[#101722] px-3 text-white"
+              value={selection.type}
+              onChange={(event) =>
+                change({ ...selection, type: event.target.value })
+              }
+            >
+              <option value="">Alle Typen</option>
+              {orderTypes.map((type) => (
+                <option key={type} value={type}>
+                  {typeNames[type]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            className={button}
+            onClick={() => change({ milestoneId: '', status: '', type: '' })}
+          >
+            Filter zurücksetzen
+          </button>
+          <button
+            className={button}
+            disabled={orders.loading}
+            onClick={() => void orders.refresh()}
+          >
+            Aktualisieren
+          </button>
+        </div>
+        <div className="mt-4">
+          <LoadFeedback {...milestones} retry={milestones.refresh} />
+        </div>
+      </fieldset>
+      <LoadFeedback {...orders} retry={orders.retry} />
+      {!orders.loading && !orders.error && orders.items.length === 0 && (
+        <Empty>Keine Aufträge für diese Auswahl vorhanden.</Empty>
+      )}
+      <ol className="space-y-4">
+        {orders.items.map((order) => (
+          <li key={order.id}>
+            <article
+              className={panel}
+              aria-label={`${order.displayId} ${order.spec.title}`}
+            >
+              <div className="mb-2 flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold">
+                <span className="text-lime-300">{order.displayId}</span>
+                <span className="text-fuchsia-200">
+                  {typeNames[order.type]}
+                </span>
+                <span className="text-slate-400">
+                  {statusNames[order.status]}
+                </span>
+              </div>
+              <h2 className="break-words text-xl font-bold text-white">
+                <Link
+                  className="underline decoration-lime-300/40 underline-offset-4 focus-visible:outline-lime-300"
+                  href={`/projects/${encodeURIComponent(projectId)}/orders/${encodeURIComponent(order.id)}`}
+                >
+                  {order.spec.title || 'Auftrag ohne Titel'}
+                </Link>
+              </h2>
+              <p className="mt-3 whitespace-pre-wrap break-words leading-7 text-slate-400">
+                {order.spec.goal}
+              </p>
+              <p className="mt-3 text-xs text-slate-500">
+                Fassung {order.specVersion} ·{' '}
+                {order.milestoneId
+                  ? (milestones.data?.find(
+                      (milestone) => milestone.id === order.milestoneId,
+                    )?.title ?? 'Milestone zugeordnet')
+                  : 'Unverplant'}
+              </p>
+            </article>
+          </li>
+        ))}
+      </ol>
+      <CollectionFooter {...orders} />
+    </Frame>
+  );
+}
+
+function SpecView({ spec }: { spec: OrderSpec }) {
+  const fields = [
+    ['Titel', spec.title],
+    ['Ziel', spec.goal],
+    ['Herkunft', spec.origin],
+    ['Nutzerproblem', spec.problem],
+    ['Umfang', spec.scope],
+    ['Ausgeschlossen', spec.exclusions],
+    ['Nutzerabläufe', spec.flows],
+    ['Teststrategie', spec.testStrategy],
+    ['Voraussetzungen', spec.prerequisites],
+    ['Dokumentation', spec.documentation],
+  ];
+  return (
+    <>
+      <dl className="space-y-5">
+        {fields.map(([title, value]) => (
+          <Setting
+            key={title}
+            title={title}
+            value={value || 'Nicht hinterlegt.'}
+          />
+        ))}
+      </dl>
+      <h3 className="mb-2 mt-6 font-bold text-white">Akzeptanzkriterien</h3>
+      {spec.criteria.length ? (
+        <ul className="space-y-2 text-sm leading-7 text-slate-300">
+          {spec.criteria.map((criterion) => (
+            <li key={criterion.id} className="break-words">
+              <span className="font-semibold text-lime-200">
+                {criterion.id}
+              </span>{' '}
+              · {criterion.text}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm leading-7 text-slate-400">
+          Noch keine Kriterien hinterlegt.
+        </p>
+      )}
+      <h3 className="mb-2 mt-6 font-bold text-white">Quellen</h3>
+      {spec.sources.length ? (
+        <ul className="space-y-2 text-sm leading-7 text-slate-300">
+          {spec.sources.map((source, index) => (
+            <li
+              key={`${index}-${source}`}
+              className="whitespace-pre-wrap break-words"
+            >
+              {source}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm leading-7 text-slate-400">
+          Keine Quellen hinterlegt.
+        </p>
+      )}
+      <h3 className="mb-3 mt-6 font-bold text-white">Refinement-Kontext</h3>
+      <dl className="space-y-4">
+        <Setting
+          title="Repository-Commit"
+          value={spec.context.repositoryCommit || 'Nicht hinterlegt.'}
+        />
+        <Setting
+          title="Dokumentationsrichtlinie"
+          value={spec.context.documentationPolicy || 'Nicht hinterlegt.'}
+        />
+      </dl>
+    </>
+  );
+}
+
+function Relation({
+  projectId,
+  targetId,
+  type,
+}: {
+  projectId: string;
+  targetId: string;
+  type: RelationType;
+}) {
+  const target = useRead<Order>(
+    `/api/projects/${encodeURIComponent(projectId)}/orders/${encodeURIComponent(targetId)}`,
+  );
+  return (
+    <li className="rounded-2xl border border-white/10 p-4">
+      <p className="mb-2 text-sm font-semibold text-fuchsia-200">
+        {relationNames[type]}
+      </p>
+      <Link
+        href={`/projects/${encodeURIComponent(projectId)}/orders/${encodeURIComponent(targetId)}`}
+        className="break-words text-sm font-semibold leading-7 text-white underline decoration-lime-300/40 underline-offset-4 focus-visible:outline-lime-300"
+      >
+        {target.data
+          ? `${target.data.displayId} · ${target.data.spec.title}`
+          : targetId}
+      </Link>
+      <div className="mt-2">
+        <LoadFeedback {...target} retry={target.refresh} />
+      </div>
+    </li>
+  );
+}
+
+export function OrderDetail({
+  projectId,
+  orderId,
+}: {
+  projectId: string;
+  orderId: string;
+}) {
+  const order = useRead<Order>(
+    `/api/projects/${encodeURIComponent(projectId)}/orders/${encodeURIComponent(orderId)}`,
+  );
+  const [version, setVersion] = useState<{
+    orderId: string;
+    selected: number;
+  }>();
+  const selected =
+    version?.orderId === orderId ? version.selected : order.data?.specVersion;
+  const snapshot = order.data?.history.find(
+    (entry) => entry.version === selected,
+  );
+  return (
+    <Frame title={order.data?.displayId ?? 'Auftrag'} eyebrow="Auftragsdetails">
+      <ProjectNavigation projectId={projectId} active="orders" />
+      <Link
+        className={`${button} mb-6`}
+        href={`/projects/${encodeURIComponent(projectId)}/orders`}
+      >
+        Zur Auftragsliste
+      </Link>
+      <LoadFeedback {...order} retry={order.refresh} />
+      {order.data && (
+        <>
+          <section
+            className={`${panel} mb-5`}
+            aria-label="Aktueller Auftragsstand"
+          >
+            <h2 className="break-words text-xl font-bold text-white">
+              {order.data.spec.title || 'Auftrag ohne Titel'}
+            </h2>
+            <dl className="mt-5 grid gap-5 sm:grid-cols-2">
+              <Setting title="Zustand" value={statusNames[order.data.status]} />
+              <Setting title="Typ" value={typeNames[order.data.type]} />
+              <Setting
+                title="Aktuelle Fassung"
+                value={String(order.data.specVersion)}
+              />
+              <div>
+                <dt className="text-sm text-slate-400">Planung</dt>
+                <dd className="mt-1 text-sm leading-7 text-slate-200">
+                  {order.data.milestoneId ? (
+                    <Link
+                      className="break-words underline decoration-lime-300/40 underline-offset-4"
+                      href={`/projects/${encodeURIComponent(projectId)}/orders?milestoneId=${encodeURIComponent(order.data.milestoneId)}`}
+                    >
+                      Aufträge im selben Milestone
+                    </Link>
+                  ) : (
+                    'Unverplant'
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </section>
+          <section className={`${panel} mb-5`} aria-label="Spezifikation">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+              <h2 className="text-lg font-bold text-white">
+                Spezifikation · Fassung {selected}
+              </h2>
+              <label className="block text-sm font-semibold text-slate-300">
+                Spezifikationsfassung
+                <select
+                  className="ml-3 min-h-11 rounded-xl border border-white/20 bg-[#101722] px-3 text-white"
+                  value={selected}
+                  onChange={(event) =>
+                    setVersion({
+                      orderId,
+                      selected: Number(event.target.value),
+                    })
+                  }
+                >
+                  {[...order.data.history]
+                    .sort((a, b) => b.version - a.version)
+                    .map((entry) => (
+                      <option key={entry.version} value={entry.version}>
+                        Fassung {entry.version}
+                        {entry.version === order.data?.specVersion
+                          ? ' · aktuell'
+                          : ''}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+            {snapshot?.createdAt && (
+              <p className="mb-5 text-xs text-slate-400">
+                Gespeichert:{' '}
+                <time dateTime={snapshot.createdAt}>
+                  {new Intl.DateTimeFormat('de-AT', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                    timeZone: 'Europe/Vienna',
+                  }).format(new Date(snapshot.createdAt))}
+                </time>
+              </p>
+            )}
+            <SpecView spec={snapshot?.spec ?? order.data.spec} />
+          </section>
+          <section className={panel} aria-label="Ausgehende Beziehungen">
+            <h2 className="mb-3 text-lg font-bold text-white">
+              Ausgehende Beziehungen
+            </h2>
+            <p className="mb-4 text-sm leading-6 text-slate-400">
+              Diese Verknüpfungen gehen von {order.data.displayId} zu den
+              genannten Aufträgen.
+            </p>
+            {order.data.relations.length ? (
+              <ul className="space-y-3">
+                {order.data.relations.map((relation) => (
+                  <Relation
+                    key={`${relation.type}-${relation.targetId}`}
+                    projectId={projectId}
+                    {...relation}
+                  />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm leading-7 text-slate-400">
+                Keine Beziehungen hinterlegt.
+              </p>
+            )}
+          </section>
+        </>
+      )}
     </Frame>
   );
 }
