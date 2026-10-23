@@ -106,7 +106,11 @@ function orderListApi(items: Order[], milestones: Milestone[] = [milestone()]) {
 
 beforeEach(() => {
   fetchMock.mockReset();
-  vi.stubGlobal('fetch', fetchMock);
+  vi.stubGlobal('fetch', (...args: Parameters<typeof fetch>) =>
+    requestUrl(args[0]).includes('/feedback-sources')
+      ? Promise.resolve(page([]))
+      : fetchMock(...args),
+  );
 });
 
 describe('LUUFI-9 Aufträge und Spezifikationen lesen', () => {

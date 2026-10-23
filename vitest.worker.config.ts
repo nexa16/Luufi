@@ -11,6 +11,7 @@ export default defineConfig({
         compatibilityDate: '2026-09-10',
         compatibilityFlags: ['nodejs_compat'],
         d1Databases: ['DB', 'LEGACY_DB'],
+        r2Buckets: ['BUCKET'],
         bindings: {
           LUUFI_ENVIRONMENT: 'preview',
           LUUFI_SOURCE_BRANCH: 'develop',

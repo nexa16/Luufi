@@ -32,10 +32,10 @@ export function deploymentIdentity(
 
 /** Readiness inspects the active database without reading personal idea content. */
 export async function platformReadiness(
-  bindings: DeploymentIdentityBindings & { DB: D1Database },
+  bindings: DeploymentIdentityBindings & { DB: D1Database; BUCKET?: R2Bucket },
 ) {
   const identity = deploymentIdentity(bindings);
-  if (!identity) return { status: 'unavailable' as const };
+  if (!identity || !bindings.BUCKET) return { status: 'unavailable' as const };
   try {
     const connection = await bindings.DB.prepare('SELECT 1 AS ready').first<{
       ready: number;
@@ -65,6 +65,21 @@ export async function platformReadiness(
     ).all();
     await bindings.DB.prepare(
       'SELECT request_key, actor, operation, payload_json, result_json FROM planning_requests LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT id, project_id, content_revision, refined_content_revision FROM feedback_threads LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT id, feedback_id, kind, text, position FROM feedback_entries LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT id, project_id, status, object_key, sha256 FROM feedback_attachments LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT id, feedback_id, input_content_revision, input_json FROM feedback_refinements LIMIT 0',
+    ).all();
+    await bindings.DB.prepare(
+      'SELECT refinement_id, feedback_id, order_id FROM feedback_order_sources LIMIT 0',
     ).all();
     return { status: 'ok' as const, ...identity };
   } catch {

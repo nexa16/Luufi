@@ -81,3 +81,31 @@ Die folgenden Fassungen v1 konkretisieren ausschließlich den bereits freigegebe
 **Kriterien:** A-1 Liste/Filter/Pagination einschließlich unverplant; A-2 Detail mit stabiler Kennung, Status, Spezifikation, historischen Fassungen und Beziehungen; A-3 deutsche mobile Darstellung, sichere Fehler und veraltete Antworten werden verworfen.
 
 **Teststrategie:** A-1–3 UI-Tests und repräsentative echte lokale D1-Browserabläufe. **Voraussetzung:** LUUFI-6/7/8. **Ausschlüsse:** Browseränderung, Ausführung und Nachweislifecycle. **Dokumentation:** Projektansichten/Aufträge.
+
+## Welle 4: Feedback und private Medien
+
+Die Gesamtfreigabe autorisiert diese konkreten Fassungen v1 auf integriertem develop506ffab1. Dokumentation/Planung1.0.0 und Implementierung/Datenzugriff1.0.1 gelten. Kein Produktionsrelease, keine automatische Analyse oder Implementierung.
+
+### LUUFI-10 v1 – Projektfeedback und Refinementquellen
+
+**Problem/Ergebnis:** Beobachtungen benötigen unveränderliche Originale, Ergänzungen und nachvollziehbare fachliche Verarbeitung.
+
+**Kriterien:** F-1 Originaltext exakt erhalten, 20.000 Zeichen und höchstens zehn Uploadplätze je Eingabe; F-2 Ergänzungen und atomare Revisionen/Replay ohne Duplikate; F-3 paginierte projektgebundene Listen und sichere Browser-/MCP-Grenzen; F-4 Refinement dokumentiert exakten Repositorycommit, Richtlinien, Inhaltsrevision und mindestens Aufträge, Fragen oder begründete Zurückstellung/Verwerfung; F-5 mehrere Quellen/Aufträge bleiben in beiden Richtungen nachvollziehbar, neue Inhalte erzeugen erneuten Bedarf.
+
+**Teststrategie:** F-1–5 D1-Persistenz-/Race-/Rollback-/Cursorprüfungen; Browser-/MCP-Adapter prüfen denselben Service, Origin, Identität, JSON-Grenzen und strukturierte Fehler. **Voraussetzung:** LUUFI-4/6. **Ausschlüsse:** KI-Analyse, automatische Auftragserstellung/Freigabe, Feedbacklöschen. **Dokumentation:** Feedback fachlich/technisch.
+
+### LUUFI-11 v1 – Private Medien und sichere Wiederholung
+
+**Problem/Ergebnis:** Bilder/Videos sollen privat verfügbar bleiben und unvollständige Übertragungen den Text nicht verlieren.
+
+**Kriterien:** M-1 JPEG/PNG/WebP bis10MB, MP4/MOV/WebM bis15MB tatsächlich serverseitig prüfen; M-2 private R2-Objekte, sichere Abrufheader/Download und Videobereiche; M-3 Upload-CAS und actor-/bytesgebundener Replay, fertige Bytes unveränderlich; M-4 pending/expired Plätze bleiben wiederholbar, begrenzte24h-Bereinigung löscht keine fertigen Referenzen; M-5 native Metadaten und höchstens64KiB-Dateistücke ohne generische Bucket-/SQL-Werkzeuge.
+
+**Teststrategie:** M-1 Unitformat-/Grenzfälle; M-2–5 echte D1/R2-/HTTP-/MCP-Tests einschließlich Race, abgebrochener Speicherung und wiederholter Bereinigung. Formate werden strukturell geprüft, ohne vollständige Codec-Decodierung. **Voraussetzung:** LUUFI-10 Slots und gemeinsamer Planungskern. **Ausschlüsse:** HEIC/Konvertierung/Transkription/öffentliche Links. **Dokumentation:** Medien und Betriebsbereinigung.
+
+### LUUFI-12 v1 – Mobile Feedbackeingabe und Uploadfortschritt
+
+**Problem/Ergebnis:** Nutzer hält Projektbeobachtungen mit Dateien am Handy fest und erkennt getrennt gespeicherten Text und Dateistatus.
+
+**Kriterien:** U-1 deutsche Projektliste/Detail/Originale/datierte Ergänzungen und paginierte Refinements/Quellen; U-2 Text und Plätze vor seriellen Dateiübertragungen, tatsächlicher Bytefortschritt und Serverprüfung; U-3 unklare Antworten sicher wiederholen, Slot nach Reload mit passender Datei fortsetzen ohne neue Texteingabe; U-4 geschützte Vorschau/Downloadfallback, fertige Dateien bleiben bei weiteren Fehlern erhalten; U-5 Projektwechsel und neue Eingaben können keine fremden oder laufenden Uploadantworten übernehmen.
+
+**Teststrategie:** U-1–5 fokussierte UI-Interaktions-/Netzfehler-/Replay-/Kontextwechseltests; repräsentativer Desktop-/Handy-Browserablauf gegen synthetische lokale D1/R2 mit absichtlich fehlgeschlagenem Upload, Reload, Wiederholung und Ergänzung. Betroffene Regressionen: Planungsnavigation, Ideen, Migrationserhalt und authentifizierte Identität. **Voraussetzung:** LUUFI-10/11. **Ausschlüsse:** Browserrefinement, Hintergrundupload nach Verlassen und Lifecycleänderungen. **Dokumentation:** Feedbackansichten.

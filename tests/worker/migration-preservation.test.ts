@@ -10,7 +10,13 @@ it('LUUFI-3 preserves legacy IDs, text, details and dates while adding revision 
   const additive = env.TEST_MIGRATIONS.filter(
     (m) => Number(m.name.slice(0, 4)) >= 5,
   );
-  expect(additive).toHaveLength(2);
+  expect(additive.map((m) => m.name)).toEqual(
+    expect.arrayContaining([
+      '0005_ideas_revisions.sql',
+      '0006_planning.sql',
+      '0007_feedback.sql',
+    ]),
+  );
   await applyD1Migrations(env.LEGACY_DB, legacy);
   expect(await platformReadiness({ ...env, DB: env.LEGACY_DB })).toEqual({
     status: 'unavailable',

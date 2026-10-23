@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { PrimaryNavigation } from '@/components/primary-navigation';
+import { OrderFeedbackSources } from './feedback';
+import { Frame, ProjectNavigation } from '@/components/project-frame';
 import { orderStatuses, orderTypes } from '@/lib/domain/planning';
 import type {
   Milestone,
@@ -226,62 +227,6 @@ function Empty({ children }: { children: ReactNode }) {
     <p className="rounded-3xl border border-dashed border-white/15 px-5 py-10 text-center leading-7 text-slate-400">
       {children}
     </p>
-  );
-}
-
-function Frame({
-  title,
-  eyebrow = 'Luufi',
-  children,
-}: {
-  title: string;
-  eyebrow?: string;
-  children: ReactNode;
-}) {
-  return (
-    <main className="mx-auto min-h-screen w-full max-w-4xl px-5 pb-32 pt-7 sm:px-8 sm:pt-12">
-      <header className="mb-7">
-        <p className={label}>{eyebrow}</p>
-        <h1 className="mt-2 break-words text-3xl font-bold tracking-tight text-white">
-          {title}
-        </h1>
-      </header>
-      {children}
-      <PrimaryNavigation active="projects" />
-    </main>
-  );
-}
-
-function ProjectNavigation({
-  projectId,
-  active,
-}: {
-  projectId: string;
-  active: 'overview' | 'milestones' | 'orders';
-}) {
-  const root = `/projects/${encodeURIComponent(projectId)}`;
-  return (
-    <nav aria-label="Projektnavigation" className="mb-7 flex flex-wrap gap-2">
-      <Link href="/" className={button}>
-        Alle Projekte
-      </Link>
-      {(
-        [
-          ['overview', 'Übersicht', root],
-          ['milestones', 'Milestones', `${root}/milestones`],
-          ['orders', 'Aufträge', `${root}/orders`],
-        ] as const
-      ).map(([key, text, href]) => (
-        <Link
-          key={key}
-          href={href}
-          aria-current={active === key ? 'page' : undefined}
-          className={`${button} ${active === key ? 'border-lime-300/50 bg-lime-300/10 text-lime-200' : ''}`}
-        >
-          {text}
-        </Link>
-      ))}
-    </nav>
   );
 }
 
@@ -974,6 +919,7 @@ export function OrderDetail({
             )}
             <SpecView spec={snapshot?.spec ?? order.data.spec} />
           </section>
+          <OrderFeedbackSources projectId={projectId} orderId={orderId} />
           <section className={panel} aria-label="Ausgehende Beziehungen">
             <h2 className="mb-3 text-lg font-bold text-white">
               Ausgehende Beziehungen

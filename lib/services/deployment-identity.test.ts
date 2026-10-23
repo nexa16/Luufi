@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deploymentIdentity, platformReadiness } from './deployment-identity';
 
+const BUCKET = {} as R2Bucket;
 const identity = {
   LUUFI_COMMIT_SHA: 'a'.repeat(40),
   LUUFI_ENVIRONMENT: 'preview',
@@ -50,7 +51,7 @@ describe('LUUFI-2 Plattformidentität und Bereitschaft', () => {
       all: vi.fn().mockResolvedValue({ results: [] }),
     });
     const DB = { prepare } as unknown as D1Database;
-    expect(await platformReadiness({ ...identity, DB })).toMatchObject({
+    expect(await platformReadiness({ ...identity, DB, BUCKET })).toMatchObject({
       status: 'ok',
       commitSha: 'a'.repeat(40),
     });
@@ -65,6 +66,9 @@ describe('LUUFI-2 Plattformidentität und Bereitschaft', () => {
       true,
     );
     expect(await platformReadiness({ DB })).toEqual({ status: 'unavailable' });
+    expect(await platformReadiness({ ...identity, DB })).toEqual({
+      status: 'unavailable',
+    });
   });
   it.each([null, { ready: 0 }])(
     'meldet fehlende Verbindung %j',
@@ -72,7 +76,7 @@ describe('LUUFI-2 Plattformidentität und Bereitschaft', () => {
       const DB = {
         prepare: () => ({ first: async () => value }),
       } as unknown as D1Database;
-      expect(await platformReadiness({ ...identity, DB })).toEqual({
+      expect(await platformReadiness({ ...identity, DB, BUCKET })).toEqual({
         status: 'unavailable',
       });
     },
@@ -83,7 +87,7 @@ describe('LUUFI-2 Plattformidentität und Bereitschaft', () => {
         throw new Error('PRIVATE');
       },
     } as unknown as D1Database;
-    expect(await platformReadiness({ ...identity, DB })).toEqual({
+    expect(await platformReadiness({ ...identity, DB, BUCKET })).toEqual({
       status: 'unavailable',
     });
   });
