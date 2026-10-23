@@ -16,6 +16,7 @@ it('LUUFI-3 preserves legacy IDs, text, details and dates while adding revision 
       '0006_planning.sql',
       '0007_feedback.sql',
       '0008_execution.sql',
+      '0009_versions.sql',
     ]),
   );
   await applyD1Migrations(env.LEGACY_DB, legacy);

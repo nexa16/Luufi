@@ -22,20 +22,57 @@ const spec = {
   context: { repositoryCommit: 'a'.repeat(40), documentationPolicy: '1.0.0' },
   sources: [],
 };
-const evidenceSpec = {...spec,title:'Implementierung nachvollziehen',goal:'Freigabe und geprüfte Integration lesen'};
+const evidenceSpec = {
+  ...spec,
+  title: 'Implementierung nachvollziehen',
+  goal: 'Freigabe und geprüfte Integration lesen',
+};
 const evidencePayload = {
- outcome:'success',executionId:'execution-e2e',generation:1,commitSha:'b'.repeat(40),
- summary:'Synthetischer normaler PR-Merge mit erhaltenem Auftragscommit',
- criteria:[{id:'C-1',result:'pass',reference:'Synthetischer automatisierter Nachweis'}],
- documentationReference:'docs/features/order-evidence.md',
- observation:{
- repository:'example/demo',branch:'develop',remoteRef:'refs/heads/develop',headSha:'c'.repeat(40),commitSha:'b'.repeat(40),
- observedAt:'2026-01-03T12:00:00.000Z',source:'codex-local-git',commitSubject:'feat(DEMO-3): Implementierung nachvollziehen',
- parentShas:['a'.repeat(40)],ancestorOfHead:true,pushed:true,
- pr:{url:'https://github.com/example/demo/pull/1',baseBranch:'develop',headSha:'b'.repeat(40),merged:true,mergeSha:'c'.repeat(40),normalMerge:true},
- ci:[{url:'https://github.com/example/demo/actions/runs/1',name:'verify',headSha:'b'.repeat(40),conclusion:'success'}],
- },
- validationId:'validation-e2e',unavailableBuildReason:'Synthetischer Stand ohne Bereitstellung',supersedesId:null,
+  outcome: 'success',
+  executionId: 'execution-e2e',
+  generation: 1,
+  commitSha: 'b'.repeat(40),
+  summary: 'Synthetischer normaler PR-Merge mit erhaltenem Auftragscommit',
+  criteria: [
+    {
+      id: 'C-1',
+      result: 'pass',
+      reference: 'Synthetischer automatisierter Nachweis',
+    },
+  ],
+  documentationReference: 'docs/features/order-evidence.md',
+  observation: {
+    repository: 'example/demo',
+    branch: 'develop',
+    remoteRef: 'refs/heads/develop',
+    headSha: 'c'.repeat(40),
+    commitSha: 'b'.repeat(40),
+    observedAt: '2026-01-03T12:00:00.000Z',
+    source: 'codex-local-git',
+    commitSubject: 'feat(DEMO-3): Implementierung nachvollziehen',
+    parentShas: ['a'.repeat(40)],
+    ancestorOfHead: true,
+    pushed: true,
+    pr: {
+      url: 'https://github.com/example/demo/pull/1',
+      baseBranch: 'develop',
+      headSha: 'b'.repeat(40),
+      merged: true,
+      mergeSha: 'c'.repeat(40),
+      normalMerge: true,
+    },
+    ci: [
+      {
+        url: 'https://github.com/example/demo/actions/runs/1',
+        name: 'verify',
+        headSha: 'b'.repeat(40),
+        conclusion: 'success',
+      },
+    ],
+  },
+  validationId: 'validation-e2e',
+  unavailableBuildReason: 'Synthetischer Stand ohne Bereitstellung',
+  supersedesId: null,
 };
 const content = `
 INSERT OR IGNORE INTO planning_projects(id,project_key,name,repository,integration_branch,production_branch,documentation_paths,deployment_hints,next_order_number) VALUES ('planning-e2e','DEMO','Beispielprojekt','example/demo','develop','main','["README.md"]','Nur synthetische lokale Testdaten',3);
@@ -54,9 +91,12 @@ INSERT OR IGNORE INTO order_executions(id,project_id,order_id,spec_version,appro
 INSERT OR IGNORE INTO order_progress(id,order_id,execution_id,generation,kind,text,next_action,created_at) VALUES ('progress-e2e','order-evidence-e2e','execution-e2e',1,'test','Prüfungen abgeschlossen','Integration prüfen','2026-01-03T11:00:00.000Z');
 INSERT OR IGNORE INTO order_lifecycle_events(id,order_id,spec_version,actor,previous_status,next_status,reason,reference,details_json,created_at) VALUES ('event-e2e','order-evidence-e2e',1,'synthetic-owner','implemented','done','Normaler PR-Merge nach develop','https://github.com/example/demo/pull/1','{}','2026-01-03T12:00:00.000Z');
 INSERT OR IGNORE INTO order_evidence(id,order_id,spec_version,kind,outcome,execution_id,generation,payload_json,created_at) VALUES
-('validation-e2e','order-evidence-e2e',1,'validation','success','execution-e2e',1,${quoted(JSON.stringify({...evidencePayload,validationId:null,summary:'Synthetische Kriterienprüfung'}))},'2026-01-03T11:00:00.000Z'),
-('implementation-e2e','order-evidence-e2e',1,'implementation','success','execution-e2e',1,${quoted(JSON.stringify({...evidencePayload,summary:'Gepushter geprüfter Auftragscommit'}))},'2026-01-03T11:30:00.000Z'),
+('validation-e2e','order-evidence-e2e',1,'validation','success','execution-e2e',1,${quoted(JSON.stringify({ ...evidencePayload, validationId: null, summary: 'Synthetische Kriterienprüfung' }))},'2026-01-03T11:00:00.000Z'),
+('implementation-e2e','order-evidence-e2e',1,'implementation','success','execution-e2e',1,${quoted(JSON.stringify({ ...evidencePayload, summary: 'Gepushter geprüfter Auftragscommit' }))},'2026-01-03T11:30:00.000Z'),
 ('integration-e2e','order-evidence-e2e',1,'integration','success','execution-e2e',1,${quoted(JSON.stringify(evidencePayload))},'2026-01-03T12:00:00.000Z');
+INSERT OR IGNORE INTO project_versions(id,project_id,label,channel,title,changelog,repository_commit,source_branch,revision,created_at) VALUES ('version-e2e','planning-e2e','Lokale Vorschau 1','develop','Nachvollziehbare Projektversion','Freigaben, Fortschritt und Integration sind lesbar.','${'c'.repeat(40)}','develop',1,'2026-01-04T10:00:00.000Z');
+INSERT OR IGNORE INTO version_orders(id,version_id,order_id,display_id,title,spec_version,implementation_id,integration_id,implementation_commit,integration_reference,provenance_kind) VALUES ('version-member-e2e','version-e2e','order-evidence-e2e','DEMO-3','Implementierung nachvollziehen',1,'implementation-e2e','integration-e2e','${'b'.repeat(40)}','https://github.com/example/demo/pull/1','execution');
+INSERT OR IGNORE INTO version_builds(id,version_id,kind,environment,outcome,payload_json,observed_at,created_at) VALUES ('build-e2e','version-e2e','site','preview','available',${quoted(JSON.stringify({ kind: 'site', outcome: 'available', url: 'https://example.invalid/demo-preview', reason: '', environment: 'preview', projectCommit: 'c'.repeat(40), sourceKind: 'sites', sourceBranch: 'main', sourceCommit: 'd'.repeat(40), versionCommitIncluded: true, mappingReference: 'Synthetischer Sites-Spiegel des öffentlichen Standes', observedAt: '2026-01-04T10:05:00.000Z', verificationReference: 'Synthetischer lokaler Browsertest' }))},'2026-01-04T10:05:00.000Z','2026-01-04T10:05:00.000Z');
 UPDATE planning_projects SET next_order_number=MAX(next_order_number,4) WHERE id='planning-e2e';
 `;
 try {

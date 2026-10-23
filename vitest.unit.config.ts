@@ -19,6 +19,8 @@ export default defineConfig({
         'lib/services/deployment-identity.ts',
         '.github/scripts/*.cjs',
         'scripts/verify-order-git.mjs',
+        'scripts/verify-release-git.mjs',
+        'scripts/verify-recovery.mjs',
       ],
       exclude: ['**/*.test.*'],
       thresholds: {

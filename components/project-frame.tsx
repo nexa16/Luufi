@@ -36,7 +36,7 @@ export function ProjectNavigation({
   active,
 }: {
   projectId: string;
-  active: 'overview' | 'feedback' | 'milestones' | 'orders';
+  active: 'overview' | 'feedback' | 'milestones' | 'orders' | 'versions';
 }) {
   const root = `/projects/${encodeURIComponent(projectId)}`;
   return (
@@ -50,6 +50,7 @@ export function ProjectNavigation({
           ['feedback', 'Feedback', `${root}/feedback`],
           ['milestones', 'Milestones', `${root}/milestones`],
           ['orders', 'Aufträge', `${root}/orders`],
+          ['versions', 'Versionen', `${root}/versions`],
         ] as const
       ).map(([key, text, href]) => (
         <Link

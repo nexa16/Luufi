@@ -137,3 +137,41 @@ Die Gesamtfreigabe und ihre ausdrückliche Fortsetzung autorisieren diese konkre
 **Kriterien:** N-1 bereit/freigegeben/aktiv/unterbrochen/implementiert/erledigt klar trennen; N-2 ungültige Freigaben, alte Kandidaten und fehlgeschlagene Prüfungen nicht als aktuelle Erfolge ausgeben; N-3 alle Historien seitenweise, Lade-/Fehler-/Retry-/Routewechsel korrekt; N-4 sichere Referenzlinks, Commit/PR/CI und fehlender Buildgrund auf Desktop/Handy lesbar; N-5 bestehende Ideen/Planung/Feedbacknavigation erhalten und keine Browsermutation anbieten.
 
 **Teststrategie:** N-1–5 fokussierte UI-Interaktions-/Status-/Sicherheitsfälle und echter lokaler D1-Browserablauf mit synthetischem Auftrag DEMO-3 auf Desktop/Handy. **Voraussetzung:** LUUFI-13/14. **Ausschlüsse:** Freigabeknöpfe, Rundenansicht, Zeiterfassung und Versions-/Releaseoberfläche. **Dokumentation:** Nachweisansichten.
+
+## Welle 6: Versionen und Betriebsabschluss
+
+Die fortgesetzte Gesamtfreigabe autorisiert diese Fassungen v1 auf develop49c400a5. Lokale fokussierte Tests ohne Coverage und ein finales CI gemäß Implementierungsrichtlinie1.0.1. Produktion bleibt separat freizugeben.
+
+### LUUFI-16 v1 – Versionen, Änderungen, Builds und Releases
+
+**Ergebnis:** Codex speichert unveränderliche Versionen aus belegten erledigten Aufträgen und datierte Build-/Releasebeobachtungen.
+
+**Kriterien:** PV-1 Versionsinhalt und Umfang unveränderlich, Auswahl oder vollständiger Milestone ohne Abschneiden; PV-2 aktuelle W5-Integration oder explizite öffentliche Bootstrapprovenienz erforderlich; PV-3 Buildhistorie trennt öffentliche und Hosting-SHAs, neueste Beobachtung je Ziel bestimmt Verfügbarkeit; PV-4 letzte verfügbare Version bleibt trotz neuer unverfügbarer Version sichtbar; PV-5 Produktionsrelease nur nach ausdrücklicher Freigabe, passendem verfügbarem Produktionsbuild und tatsächlichen Branch-/Tag-/CI-Fakten; PV-6 Revisionen, Replay, Cursor, Projektgrenzen und Rollback atomar.
+
+**Teststrategie:** PV-1–6 echte D1-Snapshot-/Grenz-/Verfügbarkeits-/Releaseprüfungen, native API/MCP-Verträge und echte temporäre Git-/Tagfixtures. **Voraussetzung:** LUUFI-14. **Ausschlüsse:** automatische Veröffentlichung, Runtime-GitHub-Credentials und Semverzwang. **Dokumentation:** Projektversionen fachlich/technisch und Releasehelper.
+
+### LUUFI-17 v1 – Versionen und Bereitstellungen lesen
+
+**Ergebnis:** Nutzer liest Versionen, Änderungen, statischen Auftragsumfang, Build-/Releasebelege und letzte verfügbare Version in deutscher mobiler Oberfläche.
+
+**Kriterien:** VV-1 öffentlicher Projektstand und privater Hostingstand getrennt; VV-2 Produktionskandidat ohne Release ausdrücklich kennzeichnen; VV-3 unabhängige Pagination, Lade-/Fehler-/Retry-/Kontextwechsel; VV-4 sichere Site-/APKLinks, fehlende Buildgründe und tatsächliche Releasefakten lesbar; VV-5 ältere verfügbare Version bleibt sichtbar.
+
+**Teststrategie:** VV-1–5 fokussierte UI-Interaktions-/Sicherheitsfälle und Desktop-/Handy-Browserablauf ausschließlich mit synthetischen Daten. **Voraussetzung:** LUUFI-16. **Ausschlüsse:** Browser-Schreibformulare und Releaseaktionen. **Dokumentation:** Versionsansichten.
+
+### LUUFI-18 v1 – Bootstrap und geprüfte Wiederherstellung
+
+**Ergebnis:** Festes Manifest1–18 übernimmt tatsächliche Neubauprovenienz getrennt von späteren Freigaben; lokale Kerndatensicherung wird durch echte isolierte Wiederherstellung geprüft.
+
+**Kriterien:** B-1 stabile IDs und feste Spezifikationen ohne allgemeinen Import; B-2 private Sites-Proofprovenienz1 und öffentliche Gitprovenienz2–18 getrennt, keine erfundenen Claims/Freigaben; B-3 atomarer kollisionssicherer idempotenter Abgleich, vorhandene Projekt-ID und spätere Nummern>=19 erhalten; B-4 vollständige allowlisted Rows, unveränderte Migrationshashes, Referenzen und fertige Medienbytes prüfen; B-5 Recovery überschreibt keine vorhandene Datei und behauptet keine Sicherung alter OAuth-/Token-/Cacheinhalte; B-6 private Live-Payloads bleiben außerhalb öffentlicher Fixtures.
+
+**Teststrategie:** B-1–3 echte D1-/Replay-/Race-/Rollback-/Konfliktfälle und API/MCP; B-4–6 echte SQLite-/Dateihashfixtures plus tatsächlicher privater Restore durch Codex. **Voraussetzung:** LUUFI-16/17. **Ausschlüsse:** generische SQL-/Import-/Backup-Runtime, Produktionsübertragung und neue historische Freigaben. **Dokumentation:** Bootstrap und Recoverybetrieb. Tatsächliche native Installation benötigt den aktualisierten Werkzeugkatalog; bereitgestellter Code bedeutet noch keine installierten Live-Daten.
+
+## LUUFI-19 v1 – Gitnachweise vor lokalen Graphumschreibungen schützen
+
+**Problem:** Die unabhängige Releasehelperprüfung fand, dass legacy Git-Grafts trotz deaktivierter Replace-Objekte lokale Abstammung und Commiteltern verändern können. Der bereits integrierte Auftragshelper war ebenfalls betroffen.
+
+**Ergebnis:** Beide schreibgeschützten Prüfer verwenden den tatsächlichen unveränderten Gitgraphen; lokale Grafts können weder Ancestry noch einen normalen Merge vortäuschen.
+
+**Kriterien:** G-1 lokale Repository-Grafts und umgebungsdefinierte Graftquellen vor Gitgraphprüfungen verlässlich ausschließen; G-2 echte manipulierte Gitfixtures zuerst rot, nach Korrektur grün; G-3 vorhandene normale Merge-, Commitzuordnungs-, Remotehead- und CI-Prüfungen erhalten; G-4 keine Git-/Remote-/Tagänderung oder Ausführung von PR-Code.
+
+**Teststrategie:** G-1/2 echte temporäre Git-Repositories einschließlich Graftdatei und Umgebung; G-3 bestehende gezielte Helperregressionen; G-4 read-only Prozessgrenzen. **Voraussetzung:** LUUFI-14; Releasehelperbehebung gehört vor Integration zu LUUFI-16. **Ausschlüsse:** neue Produktfunktionen und Änderung des festen historischen Bootstrapmanifests1–18. Diese Korrektur wird als eigener finaler Folgeauftragcommit integriert und bei verfügbarem nativen Katalog regulär als19 erfasst.

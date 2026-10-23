@@ -174,24 +174,24 @@ describe('LUUFI-6/7 dauerhafte Aufträge, Planung und Beziehungen', () => {
   });
 
   it('vergibt parallele Nummern atomar und reserviert den LUUFI-Bootstrapbereich', async () => {
-    const id = await project('LUUFI', 10);
+    const id = await project('LUUFI', 19);
     const orders = await Promise.all(
       Array.from({ length: 6 }, (_, index) =>
         createOrder(actor, id, draft(`Auftrag ${index}`), `parallel-${index}`),
       ),
     );
     expect(orders.map((order) => order.number).sort((a, b) => a - b)).toEqual([
-      10, 11, 12, 13, 14, 15,
+      19, 20, 21, 22, 23, 24,
     ]);
     expect(new Set(orders.map((order) => order.id)).size).toBe(6);
     expect(await projectState(id)).toEqual({
-      next_order_number: 16,
+      next_order_number: 25,
       planning_revision: 6,
       revision: 0,
     });
     expect(
       (await listOrders(actor, id)).items.map((order) => order.number),
-    ).toEqual([10, 11, 12, 13, 14, 15]);
+    ).toEqual([19, 20, 21, 22, 23, 24]);
   });
 
   it('wiederholt denselben parallelen Erstellungsaufruf ohne weitere Nummernvergabe', async () => {

@@ -259,6 +259,18 @@ describe('LUUFI-2 native Plattform-MCP', () => {
       'orders_implementation_record',
       'orders_integration_record',
       'orders_evidence',
+      'versions_create',
+      'versions_list',
+      'versions_get',
+      'versions_orders',
+      'versions_builds',
+      'versions_releases',
+      'versions_build_record',
+      'versions_release_record',
+      'versions_latest_available',
+      'bootstrap_status',
+      'bootstrap_reconcile',
+      'orders_bootstrap_provenance',
     ]);
     for (const name of ['probe_read', 'probe_write', 'read_probe_attachment']) {
       expect(

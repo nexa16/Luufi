@@ -123,7 +123,11 @@ beforeEach(() => {
               integrationId: null,
             }),
           )
-        : fetchMock(...args),
+        : /\/(latest-available-version|bootstrap-provenance)(?:\?|$)/.test(
+              requestUrl(args[0]),
+            )
+          ? Promise.resolve(json(null))
+          : fetchMock(...args),
   );
 });
 
