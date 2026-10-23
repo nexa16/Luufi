@@ -161,6 +161,44 @@ export const planningTools = [
     },
     ['projectId', 'id', 'beforeId', 'expectedPlanningRevision', 'requestKey'],
   ),
+  tool(
+    'orders_list',
+    'Liest Aufträge gefiltert nach Milestone, Zustand und Typ. milestoneId=null bedeutet unverplant.',
+    {
+      ...projectId,
+      ...page,
+      milestoneId: nullableId,
+      status: { type: 'string', enum: statuses },
+      type: { type: 'string', enum: types },
+    },
+    ['projectId'],
+    true,
+  ),
+  tool(
+    'orders_get',
+    'Liest Auftrag, unveränderliche Fassungen und Beziehungen.',
+    entity,
+    ['projectId', 'id'],
+    true,
+  ),
+  tool(
+    'orders_create',
+    'Erstellt einen unverplanten Entwurf und vergibt dessen Nummer atomar.',
+    { ...projectId, type: { type: 'string', enum: types }, spec, requestKey },
+    ['projectId', 'type', 'spec', 'requestKey'],
+  ),
+  tool(
+    'orders_update_draft',
+    'Speichert eine neue unveränderliche Fassung eines Entwurfs.',
+    {
+      ...entity,
+      type: { type: 'string', enum: types },
+      spec,
+      expectedRevision: revision,
+      requestKey,
+    },
+    ['projectId', 'id', 'type', 'spec', 'expectedRevision', 'requestKey'],
+  ),
 ];
 
 // A bounded subset matching exactly our static discovery schemas.
@@ -231,6 +269,7 @@ export async function callPlanningTool(
   try {
     const projects = await import('@/lib/services/projects');
     const milestones = await import('@/lib/services/milestones');
+    const orders = await import('@/lib/services/orders');
     const p = args.projectId as string,
       id = args.id as string,
       key = args.requestKey as string,
@@ -299,6 +338,32 @@ export async function callPlanningTool(
           id,
           args.beforeId as string | null,
           args.expectedPlanningRevision as number,
+          key,
+        );
+        break;
+      case 'orders_list': {
+        const { projectId: _projectId, ...filters } = args;
+        result = await orders.listOrders(actor, p, filters as never);
+        break;
+      }
+      case 'orders_get':
+        result = await orders.getOrder(actor, p, id);
+        break;
+      case 'orders_create':
+        result = await orders.createOrder(
+          actor,
+          p,
+          { type: args.type, spec: args.spec } as never,
+          key,
+        );
+        break;
+      case 'orders_update_draft':
+        result = await orders.updateDraftOrder(
+          actor,
+          p,
+          id,
+          { type: args.type, spec: args.spec } as never,
+          rev,
           key,
         );
         break;

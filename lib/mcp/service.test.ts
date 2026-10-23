@@ -142,6 +142,10 @@ describe('MCP proof JSON-RPC boundary', () => {
       'milestones_create',
       'milestones_update',
       'milestones_move',
+      'orders_list',
+      'orders_get',
+      'orders_create',
+      'orders_update_draft',
     ]);
     expect(
       response.result.tools.find((tool) => tool.name === 'probe_write'),

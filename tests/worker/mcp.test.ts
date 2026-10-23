@@ -220,6 +220,10 @@ describe('LUUFI-2 native Plattform-MCP', () => {
       'milestones_create',
       'milestones_update',
       'milestones_move',
+      'orders_list',
+      'orders_get',
+      'orders_create',
+      'orders_update_draft',
     ]);
     for (const name of ['probe_read', 'probe_write', 'read_probe_attachment']) {
       expect(
