@@ -9,3 +9,5 @@
 - [Feedback und Refinementquellen](feedback.md)
 
 Nur implementierte Features werden hier aufgeführt. Weitere Planung steht im freigegebenen Bootstrap-Auftragsregister.
+
+- [Private Medien](media.md)

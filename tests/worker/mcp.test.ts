@@ -235,6 +235,9 @@ describe('LUUFI-2 native Plattform-MCP', () => {
       'feedback_append',
       'feedback_refine',
       'orders_feedback_sources',
+      'media_get',
+      'media_read',
+      'media_cleanup',
     ]);
     for (const name of ['probe_read', 'probe_write', 'read_probe_attachment']) {
       expect(

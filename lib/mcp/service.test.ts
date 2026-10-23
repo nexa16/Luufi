@@ -157,6 +157,9 @@ describe('MCP proof JSON-RPC boundary', () => {
       'feedback_append',
       'feedback_refine',
       'orders_feedback_sources',
+      'media_get',
+      'media_read',
+      'media_cleanup',
     ]);
     expect(
       response.result.tools.find((tool) => tool.name === 'probe_write'),

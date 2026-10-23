@@ -1,5 +1,6 @@
 interface CloudflareEnv {
   DB: D1Database;
+  BUCKET: R2Bucket;
   LEGACY_DB: D1Database;
   LUUFI_ENVIRONMENT?: string;
   LUUFI_SOURCE_BRANCH?: string;

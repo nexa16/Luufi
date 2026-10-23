@@ -1,6 +1,6 @@
 {
   "project_id": "appgprj_6aaea1617a888191bc27b161c8564054",
   "d1": "DB",
-  "r2": null,
+  "r2": "BUCKET",
   "capabilities": ["mcp"]
 }

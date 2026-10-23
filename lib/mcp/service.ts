@@ -1,4 +1,10 @@
 import {
+  callMediaTool,
+  mediaTools,
+  isMediaTool,
+  validMediaArguments,
+} from './media';
+import {
   callFeedbackTool,
   feedbackTools,
   isFeedbackTool,
@@ -110,6 +116,7 @@ const tools = [
   ...ideaTools,
   ...planningTools,
   ...feedbackTools,
+  ...mediaTools,
 ] as const;
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -162,6 +169,7 @@ function validArguments(name: string, args: Record<string, unknown>): boolean {
   if (isIdeaTool(name)) return validIdeaArguments(name, args);
   if (isPlanningTool(name)) return validPlanningArguments(name, args);
   if (isFeedbackTool(name)) return validFeedbackArguments(name, args);
+  if (isMediaTool(name)) return validMediaArguments(name, args);
   switch (name) {
     case 'get_context':
     case 'probe_read':
@@ -215,6 +223,7 @@ async function callTool(
       return await callPlanningTool(name, args, deps.ownerId);
     if (isFeedbackTool(name))
       return await callFeedbackTool(name, args, deps.ownerId);
+    if (isMediaTool(name)) return await callMediaTool(name, args, deps.ownerId);
     switch (name) {
       case 'get_context':
         return toolResult(await deps.getContext());
@@ -275,7 +284,8 @@ export async function handleMcpMessage(
       ['get_guidelines', 'get_context'].includes(tool.name) ||
       isIdeaTool(tool.name) ||
       isPlanningTool(tool.name) ||
-      isFeedbackTool(tool.name),
+      isFeedbackTool(tool.name) ||
+      isMediaTool(tool.name),
   );
   switch (message.method) {
     case 'server/discover':
@@ -313,11 +323,12 @@ export async function handleMcpMessage(
           toolError(
             isIdeaTool(params.name) ||
               isPlanningTool(params.name) ||
-              isFeedbackTool(params.name)
+              isFeedbackTool(params.name) ||
+              isMediaTool(params.name)
               ? JSON.stringify({
                   code: 'validation',
                   error:
-                    isFeedbackTool(params.name)
+                    isFeedbackTool(params.name) || isMediaTool(params.name)
                       ? 'Ungültige Feedback-Werkzeugargumente.'
                       : isPlanningTool(params.name)
                         ? 'Ungültige Planungs-Werkzeugargumente.'
