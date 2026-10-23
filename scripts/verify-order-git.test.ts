@@ -145,6 +145,73 @@ afterEach(() => {
   }
 });
 describe('LUUFI-14 genuine local Git observation', () => {
+  it('LUUFI-19 ignores grafts inserted after preflight that would hide an earlier order commit', async () => {
+    const f = fixture('APP-1'),
+      reader = platform(f);
+    await expect(
+      verifyOrderGit(options(f), {
+        readPlatform: async (endpoint: string) => {
+          const result = await reader(endpoint);
+          if (endpoint.includes('/branches/'))
+            writeFileSync(
+              path.join(f.cwd, '.git', 'info', 'grafts'),
+              `${f.commit} ${f.base}\n`,
+            );
+          return result;
+        },
+      }),
+    ).rejects.toThrow('genau einen');
+  });
+  it.each(['local', 'environment'] as const)(
+    'LUUFI-19 rejects %s grafts that hide actual merge parents and forge a final candidate',
+    async (mode) => {
+      const f = fixture();
+      git(f.cwd, 'checkout', 'develop');
+      writeFileSync(
+        path.join(f.cwd, 'integration.txt'),
+        'A genuine integration change',
+      );
+      git(f.cwd, 'add', 'integration.txt');
+      git(f.cwd, 'commit', '-m', 'chore: integration change');
+      const integrationHead = git(f.cwd, 'rev-parse', 'HEAD');
+      git(f.cwd, 'update-ref', 'refs/remotes/origin/develop', integrationHead);
+      git(f.cwd, 'checkout', 'codex/test');
+      git(
+        f.cwd,
+        'merge',
+        '--no-ff',
+        'develop',
+        '-m',
+        'feat(APP-1): merge disguised as final',
+      );
+      const candidate = { ...f, commit: git(f.cwd, 'rev-parse', 'HEAD') };
+      expect(
+        git(f.cwd, 'show', '-s', '--format=%P', candidate.commit).split(' '),
+      ).toHaveLength(2);
+      await expect(
+        verifyOrderGit(options(candidate), {
+          readPlatform: platform(candidate),
+        }),
+      ).rejects.toThrow('Mergecommit');
+      const graft =
+        mode === 'local'
+          ? path.join(f.cwd, '.git', 'info', 'grafts')
+          : path.join(f.cwd, 'external-grafts');
+      writeFileSync(graft, `${candidate.commit} ${integrationHead}\n`);
+      const previous = process.env.GIT_GRAFT_FILE;
+      if (mode === 'environment') process.env.GIT_GRAFT_FILE = graft;
+      try {
+        await expect(
+          verifyOrderGit(options(candidate), {
+            readPlatform: platform(candidate),
+          }),
+        ).rejects.toThrow(mode === 'local' ? 'Graft' : 'GIT_GRAFT_FILE');
+      } finally {
+        if (previous === undefined) delete process.env.GIT_GRAFT_FILE;
+        else process.env.GIT_GRAFT_FILE = previous;
+      }
+    },
+  );
   it('supports a configured GitHub HTTPS repository while retaining its exact configured identity', async () => {
     const f = fixture();
     const reader = platform(f);

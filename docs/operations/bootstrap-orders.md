@@ -165,3 +165,13 @@ Die fortgesetzte Gesamtfreigabe autorisiert diese Fassungen v1 auf develop49c400
 **Kriterien:** B-1 stabile IDs und feste Spezifikationen ohne allgemeinen Import; B-2 private Sites-Proofprovenienz1 und öffentliche Gitprovenienz2–18 getrennt, keine erfundenen Claims/Freigaben; B-3 atomarer kollisionssicherer idempotenter Abgleich, vorhandene Projekt-ID und spätere Nummern>=19 erhalten; B-4 vollständige allowlisted Rows, unveränderte Migrationshashes, Referenzen und fertige Medienbytes prüfen; B-5 Recovery überschreibt keine vorhandene Datei und behauptet keine Sicherung alter OAuth-/Token-/Cacheinhalte; B-6 private Live-Payloads bleiben außerhalb öffentlicher Fixtures.
 
 **Teststrategie:** B-1–3 echte D1-/Replay-/Race-/Rollback-/Konfliktfälle und API/MCP; B-4–6 echte SQLite-/Dateihashfixtures plus tatsächlicher privater Restore durch Codex. **Voraussetzung:** LUUFI-16/17. **Ausschlüsse:** generische SQL-/Import-/Backup-Runtime, Produktionsübertragung und neue historische Freigaben. **Dokumentation:** Bootstrap und Recoverybetrieb. Tatsächliche native Installation benötigt den aktualisierten Werkzeugkatalog; bereitgestellter Code bedeutet noch keine installierten Live-Daten.
+
+## LUUFI-19 v1 – Gitnachweise vor lokalen Graphumschreibungen schützen
+
+**Problem:** Die unabhängige Releasehelperprüfung fand, dass legacy Git-Grafts trotz deaktivierter Replace-Objekte lokale Abstammung und Commiteltern verändern können. Der bereits integrierte Auftragshelper war ebenfalls betroffen.
+
+**Ergebnis:** Beide schreibgeschützten Prüfer verwenden den tatsächlichen unveränderten Gitgraphen; lokale Grafts können weder Ancestry noch einen normalen Merge vortäuschen.
+
+**Kriterien:** G-1 lokale Repository-Grafts und umgebungsdefinierte Graftquellen vor Gitgraphprüfungen verlässlich ausschließen; G-2 echte manipulierte Gitfixtures zuerst rot, nach Korrektur grün; G-3 vorhandene normale Merge-, Commitzuordnungs-, Remotehead- und CI-Prüfungen erhalten; G-4 keine Git-/Remote-/Tagänderung oder Ausführung von PR-Code.
+
+**Teststrategie:** G-1/2 echte temporäre Git-Repositories einschließlich Graftdatei und Umgebung; G-3 bestehende gezielte Helperregressionen; G-4 read-only Prozessgrenzen. **Voraussetzung:** LUUFI-14; Releasehelperbehebung gehört vor Integration zu LUUFI-16. **Ausschlüsse:** neue Produktfunktionen und Änderung des festen historischen Bootstrapmanifests1–18. Diese Korrektur wird als eigener finaler Folgeauftragcommit integriert und bei verfügbarem nativen Katalog regulär als19 erfasst.

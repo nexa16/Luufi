@@ -1,4 +1,6 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { devNull } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -92,6 +94,7 @@ function run(binary, args, cwd) {
         GIT_OPTIONAL_LOCKS: '0',
         GH_PROMPT_DISABLED: '1',
         GIT_NO_REPLACE_OBJECTS: '1',
+        GIT_GRAFT_FILE: devNull,
       },
     }).trim();
   } catch {
@@ -106,6 +109,21 @@ const git = (cwd, args) =>
     ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null', ...args],
     cwd,
   );
+function rejectGrafts(cwd) {
+  if (process.env.GIT_GRAFT_FILE !== undefined)
+    fail('Die Auftragsprüfung erlaubt kein geerbtes GIT_GRAFT_FILE.');
+  const directories = git(cwd, [
+    'rev-parse',
+    '--git-dir',
+    '--git-common-dir',
+  ]).split('\n');
+  if (
+    directories.some((directory) =>
+      existsSync(path.join(path.resolve(cwd, directory), 'info', 'grafts')),
+    )
+  )
+    fail('Lokale Git-Graftdateien sind für Auftragsprüfungen nicht erlaubt.');
+}
 function ancestor(cwd, commit, head) {
   try {
     git(cwd, ['merge-base', '--is-ancestor', sha(commit), sha(head)]);
@@ -146,6 +164,7 @@ export async function verifyOrderGit(
 ) {
   if (!options || typeof options !== 'object') fail('Prüfparameter fehlen.');
   const cwd = path.resolve(bounded(options.cwd, 4000, 'Repositorypfad'));
+  rejectGrafts(cwd);
   const repository = bounded(options.repository, 1000, 'Repository');
   const apiRepository = githubRepository(repository).toLowerCase();
   const orderId = bounded(options.orderId, 100, 'Auftragskennung');
